@@ -1090,7 +1090,7 @@ function App() {
                           
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', borderTop: '1px solid var(--color-border)', paddingTop: '0.75rem' }}>
                             <div>
-                              <div className="price-tag">${prod.price}</div>
+                              <div className="price-tag">₹{prod.price}</div>
                               <div className="stock-tag">{prod.stock_quantity} remaining</div>
                             </div>
                             
@@ -1160,7 +1160,7 @@ function App() {
                             </span>
                             
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '0.6rem' }}>
-                              <span className="price-tag" style={{ fontSize: '1.1rem' }}>${prod.price}</span>
+                              <span className="price-tag" style={{ fontSize: '1.1rem' }}>₹{prod.price}</span>
                               <button 
                                 className="btn btn-primary btn-sm" 
                                 onClick={() => addToCart(prod)}
@@ -1201,14 +1201,14 @@ function App() {
                             {order.items.map(item => (
                               <div key={item.order_item_id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                                 <span>{item.product.name} (x{item.quantity})</span>
-                                <span style={{ color: 'var(--color-text-secondary)' }}>${(item.price * item.quantity).toFixed(2)}</span>
+                                <span style={{ color: 'var(--color-text-secondary)' }}>₹{(item.price * item.quantity).toFixed(2)}</span>
                               </div>
                             ))}
                           </div>
 
                           <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed var(--color-border)', marginTop: '0.75rem', paddingTop: '0.75rem', fontWeight: 700, fontSize: '0.95rem' }}>
                             <span style={{ color: 'var(--color-text-primary)' }}>Total Price:</span>
-                            <span style={{ color: 'var(--color-forest)' }}>${parseFloat(order.total_price).toFixed(2)}</span>
+                            <span style={{ color: 'var(--color-forest)' }}>₹{parseFloat(order.total_price).toFixed(2)}</span>
                           </div>
                         </div>
                       ))}
@@ -1241,7 +1241,7 @@ function App() {
                             {item.name}
                           </span>
                           <span style={{ fontSize: '0.78rem', color: 'var(--color-mint)', fontWeight: 600, marginTop: '2px' }}>
-                            ${item.price} each
+                            ₹{item.price} each
                           </span>
                         </div>
                         
@@ -1258,7 +1258,7 @@ function App() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.1rem', marginBottom: '1.25rem' }}>
                       <span style={{ color: 'var(--color-text-primary)' }}>Grand Total:</span>
                       <span style={{ color: 'var(--color-forest)', fontSize: '1.2rem' }}>
-                        ${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+                        ₹{cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
                       </span>
                     </div>
                     
@@ -1318,7 +1318,7 @@ function App() {
               <div className="stat-icon-wrapper" style={{ background: '#3E2723', color: '#FFB74D' }}>💰</div>
               <div>
                 <div className="stat-value" style={{ fontSize: '1.8rem' }}>
-                  ${farmerOrders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + parseFloat(o.total_price), 0).toFixed(2)}
+                  ₹{farmerOrders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + parseFloat(o.total_price), 0).toFixed(2)}
                 </div>
                 <div className="stat-label">Revenue This Month</div>
               </div>
@@ -1352,7 +1352,7 @@ function App() {
                       
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', borderTop: '1px solid var(--color-border)', paddingTop: '0.75rem' }}>
                         <div>
-                          <div className="price-tag">${prod.price}</div>
+                          <div className="price-tag">₹{prod.price}</div>
                           <div className="stock-tag">{prod.stock_quantity} available</div>
                         </div>
                         
@@ -1414,7 +1414,7 @@ function App() {
                             </div>
                           </td>
                           <td style={{ color: 'var(--color-forest)', fontWeight: 700 }}>
-                            ${parseFloat(order.total_price).toFixed(2)}
+                            ₹{parseFloat(order.total_price).toFixed(2)}
                           </td>
                           <td>
                             <span className={`status-pill status-${order.status}`}>{order.status}</span>
@@ -1504,7 +1504,7 @@ function App() {
                     <div className="stat-card">
                       <div style={{ flex: 1 }}>
                         <div className="stat-value">
-                          {adminStats.total_revenue ? `$${parseFloat(adminStats.total_revenue).toFixed(2)}` : '$0.00'}
+                          {adminStats.total_revenue ? `₹${parseFloat(adminStats.total_revenue).toFixed(2)}` : '₹0.00'}
                         </div>
                         <div className="stat-label">Total Pipeline Revenue</div>
                       </div>
@@ -1564,7 +1564,7 @@ function App() {
                           <tr key={order.order_id}>
                             <td><strong>#{order.order_id}</strong></td>
                             <td>{order.buyer_name}</td>
-                            <td style={{ fontWeight: 600 }}>${parseFloat(order.total_price).toFixed(2)}</td>
+                            <td style={{ fontWeight: 600 }}>₹{parseFloat(order.total_price).toFixed(2)}</td>
                             <td style={{ color: 'var(--color-text-secondary)' }}>{new Date(order.created_at).toLocaleString()}</td>
                             <td>
                               <span className={`status-pill status-${order.status}`}>{order.status}</span>
@@ -1836,7 +1836,7 @@ function App() {
             <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span className="category-badge" style={{ margin: 0 }}>{activeReviewProduct.category}</span>
               <div style={{ fontSize: '1.2rem', color: 'var(--color-text-primary)', fontWeight: 700 }}>
-                Price: ${activeReviewProduct.price}
+                Price: ₹{activeReviewProduct.price}
               </div>
             </div>
 
@@ -1945,7 +1945,7 @@ function App() {
 
               <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
                 <div className="form-group" style={{ flex: 1, margin: 0 }}>
-                  <label className="form-label">Price ($ / Unit)</label>
+                  <label className="form-label">Price (₹ / Unit)</label>
                   <input 
                     type="number" 
                     step="0.01"

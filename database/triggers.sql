@@ -24,7 +24,7 @@ BEGIN
         NEW.order_id,
         buyer_phone,
         CONCAT('Hello ', buyer_name, '! Your AgriFlow Direct order #', NEW.order_id, 
-               ' has been successfully placed! Total amount: $', NEW.total_price, 
+               ' has been successfully placed! Total amount: ₹', NEW.total_price, 
                '. Our farm partners will begin preparing your fresh harvest shortly.'),
         'pending'
     );
