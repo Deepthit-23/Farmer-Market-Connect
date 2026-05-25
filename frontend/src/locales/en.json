@@ -1,0 +1,88 @@
+{
+  "nav": {
+    "home": "Home",
+    "orders": "Orders",
+    "catalog": "Catalog",
+    "logout": "Logout",
+    "profile": "Profile"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Submit"
+  },
+  "product": {
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "stock": "Stock",
+    "price": "Price",
+    "category": "Category"
+  },
+  "order": {
+    "place_order": "Place order",
+    "order_history": "Order history",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "shipped": "Shipped",
+      "delivered": "Delivered"
+    }
+  },
+  "recommendations": {
+    "title": "Recommended for you",
+    "empty": "No recommendations yet"
+  },
+  "farmerDashboard": {
+    "kicker": "Farmer analytics",
+    "title": "Farmer Trends Dashboard",
+    "subtitle": "Monitor income, product demand, stock risk, and buyer retention from the live farm order stream.",
+    "range": {
+      "label": "Date range",
+      "last30d": "Last 30 days",
+      "last90d": "Last 90 days",
+      "last1y": "Last 1 year"
+    },
+    "view": {
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "metrics": {
+      "totalIncome": "Income",
+      "orders": "Orders",
+      "lowStock": "Low stock items"
+    },
+    "alerts": {
+      "lowStockTitle": "Low stock alert",
+      "lowStockBody": "These products are below the safe threshold of 10 units. Refill them soon to avoid lost sales."
+    },
+    "errors": {
+      "loadFailed": "Could not load farmer trends."
+    },
+    "loading": "Loading trends...",
+    "income": {
+      "title": "Monthly Income Trends",
+      "subtitle": "Switch between weekly and monthly views for the same live revenue stream.",
+      "chartLabel": "Period"
+    },
+    "products": {
+      "title": "Top Products by Revenue",
+      "subtitle": "The highest earning items over the selected period.",
+      "axisLabel": "Product",
+      "revenueLegend": "Revenue"
+    },
+    "buyers": {
+      "title": "Buyer Retention",
+      "subtitle": "New buyers versus repeat buyers in each month.",
+      "repeat": "Repeat buyers",
+      "new": "New buyers"
+    }
+  },
+  "errors": {
+    "generic_error": "Something went wrong.",
+    "saved": "Saved",
+    "deleted": "Deleted"
+  }
+}

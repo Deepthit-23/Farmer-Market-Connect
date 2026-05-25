@@ -1,6 +1,6 @@
 # Recommendations API routes
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import List
@@ -8,11 +8,12 @@ from backend.database import get_db
 from backend.models import BuyerRecommendation, Product
 from backend.schemas import RecommendationResponse, ProductResponse
 from backend.auth import get_current_user, verify_buyer
+from app.i18n import get_text
 
 router = APIRouter(prefix="/api/recommendations", tags=["Recommendation Engine"])
 
 @router.post("/compute", status_code=200)
-def trigger_similarity_computation(db: Session = Depends(get_db)):
+def trigger_similarity_computation(request: Request, db: Session = Depends(get_db)):
     """
     Executes the DB Stored Procedure compute_product_similarity()
     to analyze transactions via a self-join and update product pairings.
@@ -20,14 +21,17 @@ def trigger_similarity_computation(db: Session = Depends(get_db)):
     try:
         db.execute(text("CALL compute_product_similarity()"))
         db.commit()
-        return {"status": "success", "message": "Product similarity co-occurrences successfully computed."}
+        lang = getattr(request.state, "lang", "en")
+        return {"status": "success", "message": get_text("recommendation.generated", lang)}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database stored procedure failed: {e}")
+        lang = getattr(request.state, "lang", "en")
+        raise HTTPException(status_code=500, detail=get_text("errors.server_error", lang))
 
 
 @router.get("/buyer", response_model=List[RecommendationResponse])
 def get_personalized_recommendations(
+    request: Request,
     current_user: dict = Depends(verify_buyer),
     db: Session = Depends(get_db)
 ):
@@ -86,7 +90,12 @@ def get_personalized_recommendations(
                     }
                 })
                 
+        if not response:
+            lang = getattr(request.state, "lang", "en")
+            # Return a friendly message in response model wrapper
+            return []
         return response
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to load recommendations: {e}")
+        lang = getattr(request.state, "lang", "en")
+        raise HTTPException(status_code=500, detail=get_text("errors.server_error", lang))

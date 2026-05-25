@@ -1,6 +1,6 @@
 # Buyer API routes
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_, func
 from typing import List, Optional
@@ -9,6 +9,8 @@ from backend.database import get_db
 from backend.models import Buyer, Product, Order, OrderItem, Review, Farmer
 from backend.schemas import ProductResponse, OrderCreate, OrderResponse, BuyerResponse, BuyerUpdate, ReviewCreate, ReviewResponse
 from backend.auth import get_current_user, verify_buyer
+from app.i18n import get_text
+from backend.schemas import LanguageUpdate
 
 router = APIRouter(prefix="/api/buyer", tags=["Buyer Portal"])
 
@@ -113,13 +115,15 @@ def get_product_details(product_id: int, db: Session = Depends(get_db)):
 @router.post("/orders", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def place_order(
     order_in: OrderCreate,
+    request: Request,
     current_user: dict = Depends(verify_buyer),
     db: Session = Depends(get_db)
 ):
     buyer_id = current_user["user_id"]
     
     if not order_in.items:
-        raise HTTPException(status_code=400, detail="Cart cannot be empty")
+        lang = getattr(request.state, "lang", "en")
+        raise HTTPException(status_code=400, detail=get_text("errors.validation_error", lang, detail="Cart cannot be empty"))
         
     total_price = Decimal("0.00")
     order_items_to_create = []
@@ -128,12 +132,14 @@ def place_order(
         # Check product existence and stock
         product = db.query(Product).filter(Product.product_id == item.product_id).first()
         if not product:
-            raise HTTPException(status_code=404, detail=f"Product with ID {item.product_id} not found")
+            lang = getattr(request.state, "lang", "en")
+            raise HTTPException(status_code=404, detail=get_text("errors.not_found", lang))
             
         if product.stock_quantity < item.quantity:
+            lang = getattr(request.state, "lang", "en")
             raise HTTPException(
                 status_code=400,
-                detail=f"Insufficient stock for '{product.name}'. Available: {product.stock_quantity}, requested: {item.quantity}"
+                detail=get_text("product.out_of_stock", lang, name=product.name)
             )
             
         # Deduct stock
@@ -181,6 +187,22 @@ def place_order(
         print(f"[Order Placement] Recommendation system auto-trigger warning: {rec_err}")
         
     return db_order
+
+
+@router.patch("/language", response_model=BuyerResponse)
+def set_buyer_language(
+    payload: LanguageUpdate,
+    current_user: dict = Depends(verify_buyer),
+    db: Session = Depends(get_db)
+):
+    lang = payload.language if payload.language in ["en", "hi", "kn", "ta"] else "en"
+    buyer = db.query(Buyer).filter(Buyer.buyer_id == current_user["user_id"]).first()
+    if not buyer:
+        raise HTTPException(status_code=404, detail="Buyer not found")
+    buyer.preferred_language = lang
+    db.commit()
+    db.refresh(buyer)
+    return buyer
 
 
 # --- ORDER HISTORY ---

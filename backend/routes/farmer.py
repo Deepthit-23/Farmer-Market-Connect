@@ -1,33 +1,95 @@
 # Farmer API routes
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import os
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy.orm import Session
 from typing import List
 from backend.database import get_db
 from backend.models import Farmer, Product, Order, OrderItem
-from backend.schemas import ProductCreate, ProductUpdate, ProductResponse, OrderResponse, FarmerResponse, FarmerUpdate, OrderStatusUpdate
-from backend.auth import get_current_user, verify_farmer
+from backend.schemas import (
+    ProductCreate,
+    ProductUpdate,
+    ProductResponse,
+    OrderResponse,
+    FarmerResponse,
+    FarmerUpdate,
+    OrderStatusUpdate,
+    FarmerIncomeTrendsResponse,
+    FarmerProductTrendsResponse,
+    FarmerBuyerTrendsResponse,
+)
+from backend.auth import verify_farmer
+from app.i18n import get_text
+from backend.schemas import LanguageUpdate
+from backend.services.farmer_trends import (
+    get_farmer_income_trends,
+    get_farmer_product_trends,
+    get_farmer_buyer_trends,
+)
+from backend.demo_data import DEMO_FARMER, DEMO_PRODUCTS, DEMO_ORDERS, DEMO_TRENDS
 
 router = APIRouter(prefix="/api/farmer", tags=["Farmer Portal"])
+
+
+def _demo_mode_enabled() -> bool:
+    return os.getenv("DEMO_MODE", "false").lower() in {"1", "true", "yes", "on"}
+
+
+@router.get("/trends/income", response_model=FarmerIncomeTrendsResponse)
+def get_income_trends(
+    current_user: dict = Depends(verify_farmer),
+    db: Session = Depends(get_db),
+    range: str = Query("30d", pattern="^(30d|90d|1y)$"),
+):
+    if _demo_mode_enabled():
+        return DEMO_TRENDS["income"]
+    return get_farmer_income_trends(db, current_user["user_id"], range)
+
+
+@router.get("/trends/products", response_model=FarmerProductTrendsResponse)
+def get_product_trends(
+    current_user: dict = Depends(verify_farmer),
+    db: Session = Depends(get_db),
+    range: str = Query("30d", pattern="^(30d|90d|1y)$"),
+):
+    if _demo_mode_enabled():
+        return DEMO_TRENDS["products"]
+    return get_farmer_product_trends(db, current_user["user_id"], range)
+
+
+@router.get("/trends/buyers", response_model=FarmerBuyerTrendsResponse)
+def get_buyer_trends(
+    current_user: dict = Depends(verify_farmer),
+    db: Session = Depends(get_db),
+    range: str = Query("30d", pattern="^(30d|90d|1y)$"),
+):
+    if _demo_mode_enabled():
+        return DEMO_TRENDS["buyers"]
+    return get_farmer_buyer_trends(db, current_user["user_id"], range)
 
 # --- FARMER PROFILE ---
 
 @router.get("/profile", response_model=FarmerResponse)
-def get_farmer_profile(current_user: dict = Depends(verify_farmer), db: Session = Depends(get_db)):
+def get_farmer_profile(request: Request, current_user: dict = Depends(verify_farmer), db: Session = Depends(get_db)):
+    if _demo_mode_enabled():
+        return DEMO_FARMER
     farmer = db.query(Farmer).filter(Farmer.farmer_id == current_user["user_id"]).first()
     if not farmer:
-        raise HTTPException(status_code=404, detail="Farmer not found")
+        lang = getattr(request.state, "lang", "en")
+        raise HTTPException(status_code=404, detail=get_text("errors.not_found", lang))
     return farmer
 
 @router.put("/profile", response_model=FarmerResponse)
 def update_farmer_profile(
+    request: Request,
     farmer_in: FarmerUpdate,
     current_user: dict = Depends(verify_farmer),
     db: Session = Depends(get_db)
 ):
     farmer = db.query(Farmer).filter(Farmer.farmer_id == current_user["user_id"]).first()
     if not farmer:
-        raise HTTPException(status_code=404, detail="Farmer not found")
+        lang = getattr(request.state, "lang", "en")
+        raise HTTPException(status_code=404, detail=get_text("errors.not_found", lang))
         
     for field, value in farmer_in.dict(exclude_unset=True).items():
         setattr(farmer, field, value)
@@ -37,10 +99,28 @@ def update_farmer_profile(
     return farmer
 
 
+@router.patch("/language", response_model=FarmerResponse)
+def set_farmer_language(
+    payload: LanguageUpdate,
+    current_user: dict = Depends(verify_farmer),
+    db: Session = Depends(get_db)
+):
+    lang = payload.language if payload.language in ["en", "hi", "kn", "ta"] else "en"
+    farmer = db.query(Farmer).filter(Farmer.farmer_id == current_user["user_id"]).first()
+    if not farmer:
+        raise HTTPException(status_code=404, detail=get_text("errors.not_found", "en"))
+    farmer.preferred_language = lang
+    db.commit()
+    db.refresh(farmer)
+    return farmer
+
+
 # --- PRODUCT MANAGEMENT (CRUD) ---
 
 @router.get("/products", response_model=List[ProductResponse])
 def list_farmer_products(current_user: dict = Depends(verify_farmer), db: Session = Depends(get_db)):
+    if _demo_mode_enabled():
+        return DEMO_PRODUCTS
     products = db.query(Product).filter(Product.farmer_id == current_user["user_id"]).all()
     return products
 
@@ -108,6 +188,8 @@ def delete_product(
 
 @router.get("/orders", response_model=List[OrderResponse])
 def get_incoming_orders(current_user: dict = Depends(verify_farmer), db: Session = Depends(get_db)):
+    if _demo_mode_enabled():
+        return DEMO_ORDERS
     # Find orders containing this farmer's products
     farmer_id = current_user["user_id"]
     
@@ -147,6 +229,11 @@ def update_order_status(
     current_user: dict = Depends(verify_farmer),
     db: Session = Depends(get_db)
 ):
+    if _demo_mode_enabled():
+        for order in DEMO_ORDERS:
+            if order["order_id"] == order_id:
+                order["status"] = status_update.status.lower()
+                return order
     # Verify the order contains this farmer's products
     farmer_id = current_user["user_id"]
     order = db.query(Order).join(OrderItem).join(Product).filter(

@@ -1,0 +1,33 @@
+{
+  "auth": {
+    "login_success": "लॉगिन सफल है। आपका स्वागत है {name}!",
+    "login_failed": "ईमेल या पासवर्ड गलत है।",
+    "token_expired": "आपका सत्र समाप्त हो गया है। कृपया फिर से लॉगिन करें।",
+    "unauthorized": "आपको यह क्रिया करने की अनुमति नहीं है।"
+  },
+  "order": {
+    "placed": "नमस्ते {buyer}, आपका ऑर्डर #{order_id} दे दिया गया है। कुल: ${total}.",
+    "updated": "ऑर्डर #{order_id} की स्थिति \"{old}\" से \"{new}\" में बदल गयी है।",
+    "cancelled": "ऑर्डर #{order_id} रद्द कर दिया गया है।",
+    "item_added": "आइटम {item_name} (x{qty}) आपकी कार्ट में जोड़ा गया।"
+  },
+  "product": {
+    "created": "उत्पाद सफलतापूर्वक बनाया गया।",
+    "updated": "उत्पाद सफलतापूर्वक अपडेट किया गया।",
+    "deleted": "उत्पाद हटा दिया गया।",
+    "out_of_stock": "उत्पाद \"{name}\" स्टॉक में नहीं है।"
+  },
+  "notification": {
+    "order_placed_msg": "नमस्ते {buyer}! आपका AgriFlow Direct ऑर्डर #{order_id} दे दिया गया है। कुल: ${total}.",
+    "order_updated_msg": "नमस्ते {buyer}! ऑर्डर #{order_id} की स्थिति '{old}' से '{new}' में बदल गयी है।"
+  },
+  "recommendation": {
+    "generated": "सिफारिशें सफलतापूर्वक बनाई गईं।",
+    "none_available": "वर्तमान में व्यक्तिगत सिफारिशें उपलब्ध नहीं हैं।"
+  },
+  "errors": {
+    "not_found": "मांगा गया संसाधन नहीं मिला।",
+    "server_error": "सर्वर त्रुटि।",
+    "validation_error": "अनुरोध मान्यकरण विफल: {detail}"
+  }
+}

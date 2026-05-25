@@ -55,6 +55,7 @@ class FarmerUpdate(BaseModel):
 class FarmerResponse(FarmerBase):
     farmer_id: int
     market_id: Optional[int] = None
+    preferred_language: Optional[str] = "en"
     created_at: datetime
     market: Optional[MarketResponse] = None
 
@@ -79,6 +80,7 @@ class BuyerUpdate(BaseModel):
 
 class BuyerResponse(BuyerBase):
     buyer_id: int
+    preferred_language: Optional[str] = "en"
     created_at: datetime
 
     class Config:
@@ -175,6 +177,11 @@ class OrderResponse(BaseModel):
         from_attributes = True
 
 
+# --- LANGUAGE ---
+class LanguageUpdate(BaseModel):
+    language: str
+
+
 # --- STATISTICS & ANALYTICS ---
 class AdminStats(BaseModel):
     total_markets: int
@@ -183,6 +190,43 @@ class AdminStats(BaseModel):
     total_orders: int
     total_revenue: Decimal
     status_distribution: dict
+
+
+class FarmerIncomeTrendPoint(BaseModel):
+    week_label: Optional[str] = None
+    month_label: Optional[str] = None
+    total: Decimal
+    order_count: int
+
+
+class FarmerProductTrendPoint(BaseModel):
+    product_id: int
+    name: str
+    stock_quantity: int
+    total_quantity: int
+    total_revenue: Decimal
+    price: Optional[Decimal] = None
+
+
+class FarmerBuyerTrendPoint(BaseModel):
+    month: str
+    repeat_buyers: int
+    new_buyers: int
+
+
+class FarmerIncomeTrendsResponse(BaseModel):
+    weekly: List[FarmerIncomeTrendPoint]
+    monthly: List[FarmerIncomeTrendPoint]
+
+
+class FarmerProductTrendsResponse(BaseModel):
+    top_by_qty: List[FarmerProductTrendPoint]
+    top_by_revenue: List[FarmerProductTrendPoint]
+    low_stock: List[FarmerProductTrendPoint]
+
+
+class FarmerBuyerTrendsResponse(BaseModel):
+    monthly: List[FarmerBuyerTrendPoint]
 
 # --- RECOMMENDATION ---
 class RecommendationResponse(BaseModel):
