@@ -43,11 +43,11 @@ def poll_notifications():
                 print(f"[Scheduler] Found pending notification #{notif.notification_id} for phone: {notif.phone}")
                 
                 if is_simulated:
-                    # Log message beautifully in simulated sandbox mode
+                    # Log message beautifully in simulated sandbox mode (ASCII-safe for Windows)
                     print("\n" + "="*80)
-                    print(f"🔔 [SIMULATED WHATSAPP NOTIFICATION TRIGGERED]")
-                    print(f"📱 To Buyer Phone: {notif.phone}")
-                    print(f"💬 Message Content:")
+                    print(f"[SIMULATED WHATSAPP NOTIFICATION TRIGGERED]")
+                    print(f"To Recipient Phone: {notif.phone}")
+                    print(f"Message Content:")
                     print(f"   {notif.message}")
                     print("="*80 + "\n")
                     notif.status = 'sent'
