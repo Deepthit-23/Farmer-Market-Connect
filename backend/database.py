@@ -15,14 +15,19 @@ DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
 DB_NAME = os.getenv("DB_NAME", "farmer_market")
 
-import urllib.parse
+from sqlalchemy.engine import URL
 
-# Build MySQL connection string (URL-encode password to handle special characters like '@')
-DB_PASSWORD_ESC = urllib.parse.quote_plus(DB_PASSWORD)
-DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD_ESC}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+url_object = URL.create(
+    drivername="mysql+pymysql",
+    username=DB_USER,
+    password=DB_PASSWORD,
+    host=DB_HOST,
+    port=int(DB_PORT),
+    database=DB_NAME,
+)
 
 engine = create_engine(
-    DATABASE_URL,
+    url_object,
     pool_size=10,
     max_overflow=20,
     pool_recycle=3600,

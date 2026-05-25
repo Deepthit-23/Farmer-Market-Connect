@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_BASE = 'http://127.0.0.1:8000/api';
+const API_BASE = '/api';
 
 function App() {
   // Authentication & Session State
@@ -713,10 +713,10 @@ function App() {
                 <div className="preset-login-grid">
                   <span className="form-label" style={{ fontSize: '0.8rem', textAlign: 'center' }}>Or select a DBMS testing preset account:</span>
                   
-                  <button 
+                  <button
                     type="button"
                     className="preset-btn"
-                    onClick={() => handlePresetLogin('alice@example.com', 'password123', 'buyer')}
+                    onClick={() => handlePresetLogin('alice@buyer.com', 'password123', 'buyer')}
                   >
                     <div>
                       <strong style={{ display: 'block', fontSize: '0.9rem' }}>Alice (Buyer Portal)</strong>
@@ -725,13 +725,13 @@ function App() {
                     <span className="role-tag role-buyer">Buyer</span>
                   </button>
 
-                  <button 
+                  <button
                     type="button"
                     className="preset-btn"
-                    onClick={() => handlePresetLogin('greenfarms@example.com', 'password123', 'farmer')}
+                    onClick={() => handlePresetLogin('john@farmer.com', 'password123', 'farmer')}
                   >
                     <div>
-                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>Green Farms (Farmer Portal)</strong>
+                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>John's Organic Acres (Farmer Portal)</strong>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Post products & dispatch orders</span>
                     </div>
                     <span className="role-tag role-farmer">Farmer</span>
