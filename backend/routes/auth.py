@@ -1,5 +1,6 @@
 # Authentication API routes
 
+import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -7,8 +8,13 @@ from backend.database import get_db
 from backend.models import Farmer, Buyer
 from backend.schemas import UserLogin, FarmerCreate, BuyerCreate, FarmerResponse, BuyerResponse, Token
 from backend.auth import get_password_hash, verify_password, create_access_token
+from backend.demo_data import DEMO_FARMER
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
+
+def _demo_mode_enabled() -> bool:
+    return os.getenv("DEMO_MODE", "false").lower() in {"1", "true", "yes", "on"}
 
 @router.post("/register/farmer", response_model=FarmerResponse, status_code=status.HTTP_201_CREATED)
 def register_farmer(farmer_in: FarmerCreate, db: Session = Depends(get_db)):
@@ -87,6 +93,30 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
     
     user_id = 0
     name = ""
+
+    if _demo_mode_enabled():
+        demo_accounts = {
+            ("farmer", "john@farmer.com", "password123"): (DEMO_FARMER["farmer_id"], DEMO_FARMER["farm_name"]),
+            ("buyer", "alice@buyer.com", "password123"): (1, "Alice Smith"),
+            ("admin", "admin@market.com", "admin123"): (9999, "Market Administrator"),
+        }
+        key = (role, email, password)
+        if key not in demo_accounts:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect demo credentials"
+            )
+        user_id, name = demo_accounts[key]
+        access_token = create_access_token(
+            data={"sub": email, "role": role, "user_id": user_id}
+        )
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "role": role,
+            "user_id": user_id,
+            "name": name
+        }
     
     if role == "farmer":
         farmer = db.query(Farmer).filter(Farmer.email == email).first()

@@ -1,0 +1,33 @@
+{
+  "auth": {
+    "login_success": "Login successful. Welcome {name}!",
+    "login_failed": "Invalid email or password.",
+    "token_expired": "Your session has expired. Please log in again.",
+    "unauthorized": "You are not authorized to perform this action."
+  },
+  "order": {
+    "placed": "Hello {buyer}, your order #{order_id} has been placed. Total: ${total}.",
+    "updated": "Order #{order_id} status changed from \"{old}\" to \"{new}\".",
+    "cancelled": "Order #{order_id} has been cancelled.",
+    "item_added": "Item {item_name} (x{qty}) added to your cart."
+  },
+  "product": {
+    "created": "Product created successfully.",
+    "updated": "Product updated successfully.",
+    "deleted": "Product deleted.",
+    "out_of_stock": "Product \"{name}\" is out of stock."
+  },
+  "notification": {
+    "order_placed_msg": "Hello {buyer}! Your AgriFlow Direct order #{order_id} has been placed. Total: ${total}.",
+    "order_updated_msg": "Hello {buyer}! Order #{order_id} status changed from '{old}' to '{new}'."
+  },
+  "recommendation": {
+    "generated": "Recommendations generated successfully.",
+    "none_available": "No personalized recommendations available right now."
+  },
+  "errors": {
+    "not_found": "Requested resource was not found.",
+    "server_error": "Internal server error.",
+    "validation_error": "Request validation failed: {detail}"
+  }
+}

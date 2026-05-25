@@ -26,6 +26,7 @@ class Buyer(Base):
     name = Column(String(100), nullable=False)
     phone = Column(String(20), nullable=False)
     address = Column(Text)
+    preferred_language = Column(String(10), nullable=False, server_default=text('\'en\''))
     created_at = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
     # Relationships
@@ -44,6 +45,7 @@ class Farmer(Base):
     farm_details = Column(Text)
     phone = Column(String(20), nullable=False)
     market_id = Column(Integer, ForeignKey('MARKET.market_id', ondelete='SET NULL'))
+    preferred_language = Column(String(10), nullable=False, server_default=text('\'en\''))
     created_at = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
     # Relationships

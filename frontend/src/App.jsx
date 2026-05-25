@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import LanguageSwitcher from './components/LanguageSwitcher.jsx';
+import FarmerTrendsDashboard from './components/FarmerTrendsDashboard.jsx';
 
 const API_BASE = '/api';
 
@@ -86,7 +88,7 @@ function App() {
   // Set default tabs based on role
   useEffect(() => {
     if (role === 'buyer') setActiveTab('marketplace');
-    if (role === 'farmer') setActiveTab('listings');
+    if (role === 'farmer') setActiveTab('dashboard');
     if (role === 'admin') setActiveTab('stats');
   }, [role]);
 
@@ -141,6 +143,25 @@ function App() {
     performLogin(email, password, userRole);
   };
 
+  const parseResponseBody = async (res) => {
+    const contentType = res.headers.get('content-type') || '';
+    const raw = await res.text();
+
+    if (contentType.includes('application/json')) {
+      try {
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return { detail: raw || 'Request failed' };
+      }
+    }
+
+    try {
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return { detail: raw || 'Request failed' };
+    }
+  };
+
   const performLogin = async (email, password, userRole) => {
     try {
       setLoginError('');
@@ -149,8 +170,8 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, role: userRole }),
       });
-      
-      const data = await res.json();
+
+      const data = await parseResponseBody(res);
       if (!res.ok) {
         throw new Error(data.detail || 'Login failed');
       }
@@ -202,8 +223,8 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      
-      const data = await res.json();
+
+      const data = await parseResponseBody(res);
       if (!res.ok) {
         throw new Error(data.detail || 'Registration failed');
       }
@@ -961,6 +982,7 @@ function App() {
         </div>
 
         <div className="user-info">
+          <LanguageSwitcher role={role} />
           <div className="user-badge">
             <div className="user-avatar">{getInitials(userName)}</div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -1285,6 +1307,12 @@ function App() {
           {/* Sub Navigation */}
           <div className="nav-tabs" style={{ marginBottom: '2rem', display: 'inline-flex' }}>
             <button 
+              className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
+              onClick={() => setActiveTab('dashboard')}
+            >
+              📈 Dashboard
+            </button>
+            <button 
               className={`tab-btn ${activeTab === 'listings' ? 'active' : ''}`}
               onClick={() => setActiveTab('listings')}
             >
@@ -1298,32 +1326,7 @@ function App() {
             </button>
           </div>
 
-          {/* Stats metrics row at top */}
-          <div className="stats-grid-row">
-            <div className="stat-card">
-              <div className="stat-icon-wrapper" style={{ background: '#1B2E24', color: 'var(--color-forest)' }}>🌽</div>
-              <div>
-                <div className="stat-value">{farmerProducts.length}</div>
-                <div className="stat-label">Listed Products</div>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon-wrapper" style={{ background: '#0D47A1', color: '#90CAF9' }}>📦</div>
-              <div>
-                <div className="stat-value">{farmerOrders.filter(o => o.status !== 'delivered').length}</div>
-                <div className="stat-label">Active Orders</div>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon-wrapper" style={{ background: '#3E2723', color: '#FFB74D' }}>💰</div>
-              <div>
-                <div className="stat-value" style={{ fontSize: '1.8rem' }}>
-                  ₹{farmerOrders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + parseFloat(o.total_price), 0).toFixed(2)}
-                </div>
-                <div className="stat-label">Revenue This Month</div>
-              </div>
-            </div>
-          </div>
+          {activeTab === 'dashboard' && <FarmerTrendsDashboard token={token} />}
 
           {activeTab === 'listings' && (
             <div>

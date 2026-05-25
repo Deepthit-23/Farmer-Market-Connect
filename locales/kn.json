@@ -1,0 +1,33 @@
+{
+  "auth": {
+    "login_success": "ಲಾಗಿನ್ ಯಶಸ್ವಿಯಾಯಿತು. ಸ್ವಾಗತ {name}!",
+    "login_failed": "ಇಮೇಲ್ ಅಥವಾ ಪಾಸ್ವರ್ಡ್ ತಪ್ಪು.",
+    "token_expired": "ನಿಮ್ಮ ಸೆಷನ್ ಅವಧಿ ಮುಗಿದಿದೆ. ದಯವಿಟ್ಟು ಮರು ಲಾಗಿನ್ ಮಾಡಿ.",
+    "unauthorized": "ಈ ಕ್ರಿಯೆಯನ್ನು ನಡೆಸಲು ನಿಮಗೆ ಅನುಮತಿ ಇಲ್ಲ."
+  },
+  "order": {
+    "placed": "ಹಲೋ {buyer}, ನಿಮ್ಮ ಆರ್ಡರ್ #{order_id} ರದ್ದುಹಾಕಲಾಗಿದೆ. ಒಟ್ಟು: ${total}.",
+    "updated": "ಆರ್ಡರ್ #{order_id} ಸ್ಥಿತಿ \"{old}\" ರಿಂದ \"{new}\" ಗೆ ಬದಲಾಗಿದೆ.",
+    "cancelled": "ಆರ್ಡರ್ #{order_id} ರದ್ದುಗೊಂಡಿದೆ.",
+    "item_added": "ಐಟಂ {item_name} (x{qty}) ಕಾರ್ಟ್‌ಗೆ ಸೇರಿಸಲಾಗಿದೆ."
+  },
+  "product": {
+    "created": "ಉತ್ಪನ್ನವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ರಚಿಸಲಾಗಿದೆ.",
+    "updated": "ಉತ್ಪನ್ನವನ್ನು ಅಪ್ಡೇಟ್ ಮಾಡಲಾಗಿದೆ.",
+    "deleted": "ಉತ್ಪನ್ನವನ್ನು ಅಳಿಸಲಾಗಿದೆ.",
+    "out_of_stock": "ಉತ್ಪನ್ನ \"{name}\" ಸ್ಟಾಕ್‌ನಲ್ಲಿ ಇಲ್ಲ."
+  },
+  "notification": {
+    "order_placed_msg": "ಹಲೋ {buyer}! ನಿಮ್ಮ AgriFlow Direct ಆರ್ಡರ್ #{order_id} ಹಾಕಲಾಗಿದೆ. ಒಟ್ಟು: ${total}.",
+    "order_updated_msg": "ಹಲೋ {buyer}! ಆರ್ಡರ್ #{order_id} ಸ್ಥಿತಿ '{old}' ರಿಂದ '{new}' ಗೆ ಬದಲಾಗಿದೆ."
+  },
+  "recommendation": {
+    "generated": "ಶಿಫಾರಸುಗಳು ರಚಿಸಲ್ಪಟ್ಟಿವೆ.",
+    "none_available": "ವ್ಯಕ್ತಿಗತ ಶಿಫಾರಸುಗಳು ಇಷ್ಟಾವದೆ ಲಭ್ಯವಿಲ್ಲ."
+  },
+  "errors": {
+    "not_found": "ವಿನಂತಿಸಿದ ಸಂಪನ್ಮೂಲ ಕಂಡುಬಂದಿಲ್ಲ.",
+    "server_error": "ಸರ್ವರ್ ದೋಷ.",
+    "validation_error": "ವಿನಂತಿ ಮಾನ್ಯತೆ ವಿಫಲ: {detail}"
+  }
+}

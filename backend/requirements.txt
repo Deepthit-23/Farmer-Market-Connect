@@ -6,6 +6,7 @@ cryptography
 pyjwt==2.12.1
 passlib[bcrypt]==1.7.4
 pydantic==2.13.4
+email-validator
 twilio
 python-dotenv==1.0.1
 python-multipart

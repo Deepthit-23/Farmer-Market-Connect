@@ -8,6 +8,8 @@ from twilio.rest import Client
 from backend.database import SessionLocal
 from backend.models import NotificationQueue
 from dotenv import load_dotenv
+from app.i18n import get_text
+from backend.models import Buyer, Farmer, Order
 
 # Load env variables
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
@@ -41,14 +43,64 @@ def poll_notifications():
             
             for notif in pending:
                 print(f"[Scheduler] Found pending notification #{notif.notification_id} for phone: {notif.phone}")
-                
+
+                # Determine recipient preferred language by matching phone to Buyer or Farmer
+                lang = 'en'
+                recipient_name = None
+                order = None
+                try:
+                    db.flush()
+                except Exception:
+                    pass
+
+                try:
+                    if notif.order_id:
+                        order = db.query(Order).filter(Order.order_id == notif.order_id).first()
+                    if order and order.buyer:
+                        recipient = db.query(Buyer).filter(Buyer.buyer_id == order.buyer_id).first()
+                        if recipient and getattr(recipient, 'preferred_language', None):
+                            lang = recipient.preferred_language
+                            recipient_name = recipient.name
+                    else:
+                        # Try matching farmer by phone
+                        farmer = db.query(Farmer).filter(Farmer.phone == notif.phone).first()
+                        if farmer and getattr(farmer, 'preferred_language', None):
+                            lang = farmer.preferred_language
+                            recipient_name = farmer.farm_name
+                except Exception as e:
+                    print(f"[Scheduler] Error resolving recipient language: {e}")
+
+                # Render translated message where possible using templates
+                lower_msg = (notif.message or "").lower()
+                rendered = None
+                if 'placed' in lower_msg:
+                    # Order placed template
+                    rendered = get_text(
+                        'notification.order_placed_msg',
+                        lang,
+                        buyer=recipient_name or 'Customer',
+                        order_id=notif.order_id,
+                        total=(order.total_price if order else '')
+                    )
+                elif 'status' in lower_msg or 'changed' in lower_msg:
+                    rendered = get_text(
+                        'notification.order_updated_msg',
+                        lang,
+                        buyer=recipient_name or 'Customer',
+                        order_id=notif.order_id,
+                        old='',
+                        new=(order.status if order else '')
+                    )
+                else:
+                    # Fallback: use the stored message but attempt to translate by wrapping it
+                    rendered = notif.message
+
                 if is_simulated:
-                    # Log message beautifully in simulated sandbox mode (ASCII-safe for Windows)
                     print("\n" + "="*80)
-                    print(f"[SIMULATED WHATSAPP NOTIFICATION TRIGGERED]")
+                    print(f"[SIMULATED WHATSAPP NOTIFICATION TRIGGERED] (lang={lang})")
                     print(f"To Recipient Phone: {notif.phone}")
                     print(f"Message Content:")
-                    print(f"   {notif.message}")
+                    print(f"   {rendered}")
                     print("="*80 + "\n")
                     notif.status = 'sent'
                 else:
@@ -60,7 +112,7 @@ def poll_notifications():
                             to_number = f"whatsapp:{to_number}"
                         
                         client.messages.create(
-                            body=notif.message,
+                            body=rendered or notif.message,
                             from_=TWILIO_WHATSAPP_FROM,
                             to=to_number
                         )

@@ -1,17 +1,23 @@
 # Main FastAPI Application entry point
 
+import os
 import uvicorn
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routes import auth, farmer, buyer, admin, recommendations
-from backend.scheduler import start_scheduler
+from app.i18n import best_match_from_header
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup event: Launch the background WhatsApp polling worker
-    print("[Main] Starting background WhatsApp polling scheduler...")
-    start_scheduler()
+    demo_mode = os.getenv("DEMO_MODE", "false").lower() in {"1", "true", "yes", "on"}
+    if demo_mode:
+        print("[Main] Demo mode enabled. Skipping background WhatsApp polling scheduler.")
+    else:
+        from backend.scheduler import start_scheduler
+        print("[Main] Starting background WhatsApp polling scheduler...")
+        start_scheduler()
     yield
     # Shutdown event
     print("[Main] Shutting down...")
@@ -22,6 +28,23 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+
+@app.middleware("http")
+async def language_middleware(request: Request, call_next):
+    # 1) query param override
+    qlang = request.query_params.get("lang")
+    if qlang:
+        resolved = qlang if qlang in ["en", "hi", "kn", "ta"] else "en"
+    else:
+        # 2) Accept-Language header
+        al = request.headers.get("accept-language", "")
+        resolved = best_match_from_header(al)
+
+    # store resolved locale on the request for handlers to use
+    request.state.lang = resolved
+    response = await call_next(request)
+    return response
 
 # Configure CORS for React integration (port 5173 / 3000)
 origins = [
