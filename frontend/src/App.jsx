@@ -30,6 +30,10 @@ function App() {
   // Active Screen View state (depending on role)
   const [activeTab, setActiveTab] = useState('');
 
+  // UI Flow States
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
   // Buyer States
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -111,6 +115,22 @@ function App() {
     setFarmerProducts([]);
     setFarmerOrders([]);
     setAdminStats(null);
+    setIsCartOpen(false);
+    triggerToast('Logged out successfully.');
+  };
+
+  // Toast handler
+  const triggerToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage('');
+    }, 3500);
+  };
+
+  // User initials helper
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   };
 
   // Preset Auto-login helper for easy grading/testing
@@ -137,6 +157,7 @@ function App() {
       
       saveAuthSession(data.access_token, data.role, data.user_id, data.name);
       setLastTriggerAction(`Logged in successfully as ${data.name} (${userRole}).`);
+      triggerToast(`Welcome back, ${data.name}!`);
     } catch (err) {
       setLoginError(err.message);
     }
@@ -193,6 +214,7 @@ function App() {
       setLoginRole(regRole);
       setIsRegisterMode(false);
       setLastTriggerAction(`Successfully registered new ${regRole}: ${regName}.`);
+      triggerToast('Registration completed successfully!');
       
       // Clear inputs
       setRegEmail('');
@@ -255,21 +277,18 @@ function App() {
   // Fetch farmer profile and data
   const fetchFarmerData = async () => {
     try {
-      // Products CRUD
       const resProds = await fetch(`${API_BASE}/farmer/products`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const dataProds = await resProds.json();
       if (resProds.ok) setFarmerProducts(dataProds);
 
-      // Incoming Orders
       const resOrders = await fetch(`${API_BASE}/farmer/orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const dataOrders = await resOrders.json();
       if (resOrders.ok) setFarmerOrders(dataOrders);
 
-      // Profile
       const resProf = await fetch(`${API_BASE}/farmer/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -301,12 +320,10 @@ function App() {
       const dataOrders = await resOrders.json();
       if (resOrders.ok) setAdminOrders(dataOrders);
 
-      // Retrieve live triggers audit log
       const resAudit = await fetch(`${API_BASE}/admin/audit-logs`, { headers });
       const dataAudit = await resAudit.json();
       if (resAudit.ok) setAuditLogs(dataAudit);
 
-      // Retrieve twilio queued logs
       const resQueue = await fetch(`${API_BASE}/admin/notifications`, { headers });
       const dataQueue = await resQueue.json();
       if (resQueue.ok) setNotificationQueue(dataQueue);
@@ -327,7 +344,7 @@ function App() {
     } else if (role === 'admin') {
       fetchAdminData();
       
-      // Auto-poll logs and notification queue every 3.5 seconds to show database triggers firing instantly!
+      // Auto-poll logs and notification queue every 3.5 seconds
       const pollInterval = setInterval(() => {
         fetchAdminData();
       }, 3500);
@@ -341,7 +358,7 @@ function App() {
     const existing = cart.find(i => i.product_id === product.product_id);
     if (existing) {
       if (existing.quantity >= product.stock_quantity) {
-        alert(`Cannot add more. Only ${product.stock_quantity} available in stock.`);
+        triggerToast(`Only ${product.stock_quantity} remaining in stock.`);
         return;
       }
       setCart(cart.map(i => i.product_id === product.product_id ? { ...i, quantity: i.quantity + 1 } : i));
@@ -349,6 +366,7 @@ function App() {
       setCart([...cart, { ...product, quantity: 1 }]);
     }
     setLastTriggerAction(`Added '${product.name}' to cart.`);
+    triggerToast(`Added ${product.name} to basket!`);
   };
 
   const updateCartQty = (prodId, delta, stockLimit) => {
@@ -357,9 +375,10 @@ function App() {
     const nextQty = existing.quantity + delta;
     if (nextQty <= 0) {
       setCart(cart.filter(i => i.product_id !== prodId));
+      triggerToast('Removed item from basket.');
     } else {
       if (nextQty > stockLimit) {
-        alert(`Only ${stockLimit} units of this product are in stock.`);
+        triggerToast(`Only ${stockLimit} units of this product are in stock.`);
         return;
       }
       setCart(cart.map(i => i.product_id === prodId ? { ...i, quantity: nextQty } : i));
@@ -382,13 +401,14 @@ function App() {
       if (!res.ok) throw new Error(data.detail || 'Failing checkout transaction');
       
       setCart([]);
+      setIsCartOpen(false);
       fetchProductsFeed();
       fetchOrderHistory();
       fetchRecommendations();
       setLastTriggerAction(`Order #${data.order_id} successfully created. Database auto-deducted stock & computed co-occurrences.`);
-      alert(`Success! Order #${data.order_id} placed. Recommendations re-calculated in MySQL!`);
+      triggerToast(`Success! Placed Order #${data.order_id}`);
     } catch (err) {
-      alert(`Checkout failed: ${err.message}`);
+      triggerToast(`Checkout failed: ${err.message}`);
     }
   };
 
@@ -432,6 +452,7 @@ function App() {
       
       setNewComment('');
       setLastTriggerAction(`Submitted a ${newRating}-star review for '${activeReviewProduct.name}'.`);
+      triggerToast('Review submitted successfully!');
     } catch (err) {
       setReviewError(err.message);
     }
@@ -454,9 +475,9 @@ function App() {
 
       fetchFarmerData();
       setLastTriggerAction(`Order #${orderId} status changed to '${newStatus}'. Fired MySQL AFTER UPDATE audit trigger.`);
-      alert(`Order status updated to '${newStatus}'. The database trigger has logged this action & queued a WhatsApp notification!`);
+      triggerToast(`Order #${orderId} status updated to ${newStatus}!`);
     } catch (err) {
-      alert(err.message);
+      triggerToast(`Failed: ${err.message}`);
     }
   };
 
@@ -521,6 +542,7 @@ function App() {
       setShowProductModal(false);
       fetchFarmerData();
       setLastTriggerAction(editingProduct ? `Updated product '${prodFormName}' details.` : `Added new product '${prodFormName}' to market catalog.`);
+      triggerToast(editingProduct ? 'Crop updated successfully!' : 'Listed new produce successfully!');
     } catch (err) {
       setProdFormError(err.message);
     }
@@ -537,8 +559,9 @@ function App() {
       
       fetchFarmerData();
       setLastTriggerAction(`Deleted product ID ${prodId} from farmer catalog.`);
+      triggerToast('Crop listing deleted.');
     } catch (err) {
-      alert(err.message);
+      triggerToast(err.message);
     }
   };
 
@@ -566,8 +589,9 @@ function App() {
       setMarketFormLocation('');
       fetchAdminData();
       setLastTriggerAction(`Market '${data.name}' established successfully.`);
+      triggerToast(`Market '${data.name}' launched!`);
     } catch (err) {
-      alert(err.message);
+      triggerToast(err.message);
     }
   };
 
@@ -581,9 +605,10 @@ function App() {
       if (res.ok) {
         fetchAdminData();
         setLastTriggerAction(`Disassembled Market ID ${marketId}.`);
+        triggerToast('Market disassembled successfully.');
       }
     } catch (err) {
-      alert(err.message);
+      triggerToast(err.message);
     }
   };
 
@@ -602,104 +627,129 @@ function App() {
       setAssignMarketId('');
       fetchAdminData();
       setLastTriggerAction(`Assigned Farmer '${data.farm_name}' to Market ID ${assignMarketId}.`);
+      triggerToast(`Linked ${data.farm_name} successfully!`);
     } catch (err) {
-      alert(err.message);
+      triggerToast(err.message);
     }
   };
 
-  // --- RENDER METHODS ---
+  // --- SVGs for empty states ---
+  const renderEmptyState = (title, subtitle) => (
+    <div className="empty-state">
+      <svg className="empty-state-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="80" fill="#F4F6F4" />
+        <path d="M70 90C70 73.4315 83.4315 60 100 60C116.569 60 130 73.4315 130 90V130H70V90Z" fill="#E2ECE9" />
+        <rect x="60" y="110" width="80" height="30" rx="10" fill="#2D6A4F" />
+        <circle cx="90" cy="90" r="5" fill="#52B788" />
+        <circle cx="110" cy="90" r="5" fill="#52B788" />
+      </svg>
+      <h4 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-forest)', fontSize: '1.2rem', marginBottom: '0.25rem' }}>{title}</h4>
+      <p style={{ fontSize: '0.88rem' }}>{subtitle}</p>
+    </div>
+  );
 
+  // --- RENDER LOGIN VIEW ---
   if (!token) {
     return (
-      <div className="container">
-        <div className="login-container">
-          <div className="login-card glass-panel">
-            <div className="brand" style={{ justifyContent: 'center', marginBottom: '1.5rem' }}>
+      <div className="login-split-container fade-in-section">
+        {/* Left mural banner */}
+        <div className="login-left-mural" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200')` }}>
+          <div className="login-mural-text">
+            <h1 style={{ fontSize: '3.6rem', color: '#FFFFFF', marginBottom: '0.5rem', fontFamily: 'var(--font-heading)' }}>AgriFlow Direct</h1>
+            <p style={{ fontSize: '1.25rem', color: '#E8ECE4', fontWeight: 500, fontFamily: 'var(--font-body)' }}>
+              Connecting fresh produce to your table
+            </p>
+          </div>
+        </div>
+
+        {/* Right side form card */}
+        <div className="login-right-form">
+          <div className="login-card">
+            <div className="brand" style={{ justifyContent: 'center', marginBottom: '1.75rem' }}>
               <div className="brand-icon">🌱</div>
-              <span className="gradient-text">Farmer Market Connect</span>
+              <span className="brand-title">AgriFlow Direct</span>
             </div>
             
             {regSuccess && (
-              <div className="status-pill status-delivered" style={{ width: '100%', textAlign: 'center', marginBottom: '1.25rem', padding: '0.6rem' }}>
+              <div className="status-pill status-delivered" style={{ width: '100%', textAlign: 'center', marginBottom: '1.25rem', padding: '0.6rem', display: 'block' }}>
                 {regSuccess}
               </div>
             )}
 
             {!isRegisterMode ? (
               <>
-                <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '1.4rem' }}>Demonstration Login</h2>
+                <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '1.4rem', fontFamily: 'var(--font-heading)' }}>
+                  Sign In to AgriFlow
+                </h2>
                 
                 {loginError && (
-                  <div className="alert-info" style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: '#fca5a5', marginBottom: '1.25rem' }}>
-                    Error: {loginError}
+                  <div className="status-pill status-pending" style={{ width: '100%', color: '#D32F2F', background: '#FFEBEE', border: '1px solid #FFCDD2', textAlign: 'center', marginBottom: '1.25rem', padding: '0.6rem', display: 'block' }}>
+                    {loginError}
                   </div>
                 )}
 
                 <form onSubmit={handleLoginFormSubmit}>
                   <div className="form-group">
-                    <label className="form-label">Demonstration Role</label>
-                    <div className="nav-tabs" style={{ width: '100%', marginBottom: '1rem' }}>
+                    <label className="form-label" style={{ textAlign: 'center', display: 'block' }}>Demonstration Role</label>
+                    <div className="role-pill-tabs">
                       <button 
-                        type="button" 
-                        className={`tab-btn ${loginRole === 'buyer' ? 'active' : ''}`}
-                        style={{ flex: 1 }}
-                        onClick={() => setLoginRole('buyer')}
+                         type="button" 
+                         className={`role-pill-btn ${loginRole === 'buyer' ? 'active' : ''}`}
+                         onClick={() => setLoginRole('buyer')}
                       >
                         Buyer
                       </button>
                       <button 
-                        type="button" 
-                        className={`tab-btn ${loginRole === 'farmer' ? 'active' : ''}`}
-                        style={{ flex: 1 }}
-                        onClick={() => setLoginRole('farmer')}
+                         type="button" 
+                         className={`role-pill-btn ${loginRole === 'farmer' ? 'active' : ''}`}
+                         onClick={() => setLoginRole('farmer')}
                       >
                         Farmer
                       </button>
                       <button 
-                        type="button" 
-                        className={`tab-btn ${loginRole === 'admin' ? 'active' : ''}`}
-                        style={{ flex: 1 }}
-                        onClick={() => setLoginRole('admin')}
+                         type="button" 
+                         className={`role-pill-btn ${loginRole === 'admin' ? 'active' : ''}`}
+                         onClick={() => setLoginRole('admin')}
                       >
                         Admin
                       </button>
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Email Address</label>
+                  <div className="floating-group">
                     <input 
                       type="email" 
-                      className="form-control" 
+                      className="floating-input" 
+                      placeholder=" "
                       value={loginEmail} 
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="name@example.com"
                       required 
                     />
+                    <label className="floating-label">Email Address</label>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Password</label>
+                  <div className="floating-group">
                     <input 
                       type="password" 
-                      className="form-control" 
+                      className="floating-input" 
+                      placeholder=" "
                       value={loginPassword} 
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="••••••••"
                       required 
                     />
+                    <label className="floating-label">Password</label>
                   </div>
 
-                  <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
-                    Access System Panel
+                  <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem', display: 'block' }}>
+                    Sign In
                   </button>
                 </form>
 
-                <div style={{ textAlign: 'center', marginTop: '1.25rem', marginBottom: '1.5rem' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>Don't have an account? </span>
+                <div style={{ textAlign: 'center', marginTop: '1.25rem', marginBottom: '1rem' }}>
+                  <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.88rem' }}>Don't have an account? </span>
                   <button 
                     type="button" 
-                    style={{ background: 'none', border: 'none', color: 'var(--accent-mint)', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontSize: '0.88rem', fontWeight: 'bold' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-forest)', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontSize: '0.88rem', fontWeight: 'bold' }}
                     onClick={() => {
                       setIsRegisterMode(true);
                       setRegSuccess('');
@@ -711,71 +761,82 @@ function App() {
                 </div>
 
                 <div className="preset-login-grid">
-                  <span className="form-label" style={{ fontSize: '0.8rem', textAlign: 'center' }}>Or select a DBMS testing preset account:</span>
+                  <span className="form-label" style={{ fontSize: '0.78rem', textAlign: 'center', margin: '0.5rem 0' }}>
+                    Or select an Enterprise Sandbox Account:
+                  </span>
                   
                   <button
                     type="button"
-                    className="preset-btn"
+                    className="preset-card"
                     onClick={() => handlePresetLogin('alice@buyer.com', 'password123', 'buyer')}
                   >
-                    <div>
-                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>Alice (Buyer Portal)</strong>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Test purchases & recommendations</span>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <div className="preset-avatar">A</div>
+                      <div>
+                        <strong style={{ display: 'block', fontSize: '0.88rem', color: 'var(--color-forest)' }}>Alice</strong>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Standard Consumer</span>
+                      </div>
                     </div>
-                    <span className="role-tag role-buyer">Buyer</span>
+                    <span className="role-badge">Buyer</span>
                   </button>
 
                   <button
                     type="button"
-                    className="preset-btn"
+                    className="preset-card"
                     onClick={() => handlePresetLogin('john@farmer.com', 'password123', 'farmer')}
                   >
-                    <div>
-                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>John's Organic Acres (Farmer Portal)</strong>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Post products & dispatch orders</span>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <div className="preset-avatar">J</div>
+                      <div>
+                        <strong style={{ display: 'block', fontSize: '0.88rem', color: 'var(--color-forest)' }}>John's Organic Acres</strong>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Certified Farm Partner</span>
+                      </div>
                     </div>
-                    <span className="role-tag role-farmer">Farmer</span>
+                    <span className="role-badge" style={{ backgroundColor: '#E0F2F1', color: '#00796B' }}>Farmer</span>
                   </button>
 
                   <button 
                     type="button"
-                    className="preset-btn"
+                    className="preset-card"
                     onClick={() => handlePresetLogin('admin@market.com', 'admin123', 'admin')}
                   >
-                    <div>
-                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>Database Administrator</strong>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Audit Live Triggers, logs & scheduler</span>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <div className="preset-avatar">AD</div>
+                      <div>
+                        <strong style={{ display: 'block', fontSize: '0.88rem', color: 'var(--color-forest)' }}>Database Admin</strong>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>System Logistics Console</span>
+                      </div>
                     </div>
-                    <span className="role-tag role-admin">Admin</span>
+                    <span className="role-badge" style={{ backgroundColor: '#FFF3E0', color: '#E65100' }}>Admin</span>
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '1.4rem' }}>Register Account</h2>
+                <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '1.4rem', fontFamily: 'var(--font-heading)' }}>
+                  Create Account
+                </h2>
                 
                 {regError && (
-                  <div className="alert-info" style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: '#fca5a5', marginBottom: '1.25rem' }}>
-                    Error: {regError}
+                  <div className="status-pill status-pending" style={{ width: '100%', color: '#D32F2F', background: '#FFEBEE', border: '1px solid #FFCDD2', textAlign: 'center', marginBottom: '1.25rem', padding: '0.6rem', display: 'block' }}>
+                    {regError}
                   </div>
                 )}
 
                 <form onSubmit={handleRegisterSubmit}>
                   <div className="form-group">
-                    <label className="form-label">Join As</label>
-                    <div className="nav-tabs" style={{ width: '100%', marginBottom: '1rem' }}>
+                    <label className="form-label" style={{ textAlign: 'center', display: 'block' }}>Join As</label>
+                    <div className="role-pill-tabs">
                       <button 
                         type="button" 
-                        className={`tab-btn ${regRole === 'buyer' ? 'active' : ''}`}
-                        style={{ flex: 1 }}
+                        className={`role-pill-btn ${regRole === 'buyer' ? 'active' : ''}`}
                         onClick={() => setRegRole('buyer')}
                       >
                         Buyer
                       </button>
                       <button 
                         type="button" 
-                        className={`tab-btn ${regRole === 'farmer' ? 'active' : ''}`}
-                        style={{ flex: 1 }}
+                        className={`role-pill-btn ${regRole === 'farmer' ? 'active' : ''}`}
                         onClick={() => setRegRole('farmer')}
                       >
                         Farmer
@@ -783,65 +844,65 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">{regRole === 'buyer' ? 'Full Name' : 'Farm Name'}</label>
+                  <div className="floating-group">
                     <input 
                       type="text" 
-                      className="form-control" 
+                      className="floating-input" 
+                      placeholder=" "
                       value={regName} 
                       onChange={(e) => setRegName(e.target.value)}
-                      placeholder={regRole === 'buyer' ? 'e.g. John Doe' : 'e.g. Sunny Orchards'}
                       required 
                     />
+                    <label className="floating-label">{regRole === 'buyer' ? 'Full Name' : 'Farm Name'}</label>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Email Address</label>
+                  <div className="floating-group">
                     <input 
                       type="email" 
-                      className="form-control" 
+                      className="floating-input" 
+                      placeholder=" "
                       value={regEmail} 
                       onChange={(e) => setRegEmail(e.target.value)}
-                      placeholder="name@example.com"
                       required 
                     />
+                    <label className="floating-label">Email Address</label>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Password (Min 6 chars)</label>
+                  <div className="floating-group">
                     <input 
                       type="password" 
-                      className="form-control" 
+                      className="floating-input" 
+                      placeholder=" "
                       value={regPassword} 
                       onChange={(e) => setRegPassword(e.target.value)}
-                      placeholder="••••••••"
                       minLength={6}
                       required 
                     />
+                    <label className="floating-label">Password (Min 6 chars)</label>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Phone (WhatsApp format, e.g. +1234567890)</label>
+                  <div className="floating-group">
                     <input 
                       type="text" 
-                      className="form-control" 
+                      className="floating-input" 
+                      placeholder=" "
                       value={regPhone} 
                       onChange={(e) => setRegPhone(e.target.value)}
-                      placeholder="+919876543210"
                       required 
                     />
+                    <label className="floating-label">Phone (e.g. +919876543210)</label>
                   </div>
 
                   {regRole === 'buyer' ? (
-                    <div className="form-group">
-                      <label className="form-label">Delivery Address</label>
+                    <div className="floating-group">
                       <input 
                         type="text" 
-                        className="form-control" 
+                        className="floating-input" 
+                        placeholder=" "
                         value={regAddress} 
                         onChange={(e) => setRegAddress(e.target.value)}
-                        placeholder="e.g. 12 Pine Road, Sector 5" 
                       />
+                      <label className="floating-label">Delivery Address</label>
                     </div>
                   ) : (
                     <div className="form-group">
@@ -851,21 +912,21 @@ function App() {
                         rows="2"
                         value={regDetails} 
                         onChange={(e) => setRegDetails(e.target.value)}
-                        placeholder="e.g. Family-owned organic apple orchards since 1995." 
+                        placeholder="Family-owned organic farm..." 
                       />
                     </div>
                   )}
 
-                  <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
-                    Register & Join Market
+                  <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem', display: 'block' }}>
+                    Register & Sign Up
                   </button>
                 </form>
 
                 <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>Already have an account? </span>
+                  <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.88rem' }}>Already have an account? </span>
                   <button 
                     type="button" 
-                    style={{ background: 'none', border: 'none', color: 'var(--accent-mint)', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontSize: '0.88rem', fontWeight: 'bold' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-forest)', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontSize: '0.88rem', fontWeight: 'bold' }}
                     onClick={() => {
                       setIsRegisterMode(false);
                       setRegSuccess('');
@@ -884,45 +945,64 @@ function App() {
     );
   }
 
+  // --- MAIN RENDER APPLICATION ---
   return (
-    <div className="container">
-      {/* Header and User Session Tag */}
+    <div className="container fade-in-section">
+      {/* Header Sticky Navigation Bar */}
       <header className="app-header">
         <div className="brand">
           <div className="brand-icon">🌱</div>
           <div>
-            <span className="gradient-text" style={{ fontSize: '1.5rem', fontWeight: 800 }}>AgriFlow Direct</span>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-body)', fontWeight: 500, letterSpacing: '0.05em' }}>Direct Farm-to-Table Supply Chain Integrity</div>
+            <span className="brand-title">AgriFlow Direct</span>
+            <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', fontWeight: 500, letterSpacing: '0.02em', marginTop: '-2px' }}>
+              Connecting fresh produce to your table
+            </div>
           </div>
         </div>
 
         <div className="user-info">
+          {role === 'buyer' && (
+            <button 
+              className="btn btn-secondary btn-sm" 
+              onClick={() => setIsCartOpen(true)}
+              style={{ padding: '0.5rem 1.1rem', display: 'inline-flex', alignItems: 'center' }}
+            >
+              🛒 Basket 
+              <span className="role-badge" style={{ marginLeft: '6px', background: 'var(--color-forest)', color: '#FFFFFF', padding: '0.1rem 0.4rem', border: 'none' }}>
+                {cart.length}
+              </span>
+            </button>
+          )}
+          
           <div className="user-badge">
-            <span style={{ color: 'var(--text-primary)' }}>{userName}</span>
-            <span className={`role-tag role-${role}`}>{role}</span>
+            <div className="user-avatar">{getInitials(userName)}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <span style={{ color: 'var(--color-text-primary)', fontSize: '0.88rem', fontWeight: 600 }}>{userName}</span>
+              <span className={`role-badge role-${role}`} style={{ fontSize: '0.6rem', padding: '0.05rem 0.4rem', marginTop: '2px' }}>{role}</span>
+            </div>
           </div>
           <button className="btn btn-secondary btn-sm" onClick={handleLogout}>Logout</button>
         </div>
       </header>
 
       {/* Global Live Action Console (Visualizes supply chain audits in real-time) */}
-      <div className="dbms-console">
+      <div className="dbms-console" style={{ marginTop: '2rem' }}>
         <div className="console-title">
           <span>🖥️ Supply Chain Logistics Audit Ledger</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Event-Driven Broadcaster</span>
-            <div className="pulse-dot"></div>
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Event-Driven Broadcaster</span>
+            <div style={{ width: '8px', height: '8px', borderRadius: '99px', background: 'var(--color-mint)', animation: 'pulse 1.5s infinite' }}></div>
           </div>
         </div>
         <div className="log-entry">
-          <span style={{ color: 'var(--text-muted)' }}>[System Audit]: </span>
+          <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>[System Audit]: </span>
           <span>{lastTriggerAction}</span>
         </div>
-        <div className="log-entry" style={{ fontSize: '0.75rem', color: 'var(--text-body)', borderTop: '1px dashed rgba(52, 211, 153, 0.08)', paddingTop: '0.4rem', marginTop: '0.4rem' }}>
-          <span style={{ color: 'var(--brand-mint)', fontWeight: 600 }}>Engine Logistics Highlights: </span>
-          {role === 'buyer' && <span>Integrated B2B/B2C direct crop catalog feeds, Jaccard similarity-score basket matching recommendation engines.</span>}
-          {role === 'farmer' && <span>Transactional logistics fulfillment updates, catalog inventory stock-quantity controls, secure cargo dispatch.</span>}
-          {role === 'admin' && <span>Event-triggered supply chain integrity checks, automated SMS/WhatsApp logistics logs, real-time message broadcasting queues.</span>}
+        <div className="log-entry" style={{ fontSize: '0.75rem', borderTop: '1px dashed var(--color-border)', paddingTop: '0.4rem', marginTop: '0.4rem' }}>
+          <span style={{ color: 'var(--color-forest)', fontWeight: 600 }}>Engine Logistics Highlights: </span>
+          {role === 'buyer' && <span>Direct farm crop feeds, similarity basket recommendation algorithms.</span>}
+          {role === 'farmer' && <span>Transactional logistics fulfillment updates, catalog inventory stock-quantity controls.</span>}
+          {role === 'admin' && <span>Event-triggered supply chain logs, message dispatch broadcasting queues.</span>}
         </div>
       </div>
 
@@ -944,7 +1024,7 @@ function App() {
                 fetchRecommendations();
               }}
             >
-              ✨ Personalized Recommendations
+              ✨ Recommendations
             </button>
             <button 
               className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
@@ -957,118 +1037,131 @@ function App() {
             </button>
           </div>
 
+          {/* Hero Welcome banner */}
+          <div className="organic-card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #F4F6F4 0%, #FAFAF7 100%)', borderLeft: '4px solid var(--color-forest)', padding: '1.5rem 2rem' }}>
+            <h2 style={{ fontSize: '1.65rem', color: 'var(--color-forest)', fontFamily: 'var(--font-heading)', marginBottom: '0.35rem' }}>
+              Good morning, {userName}!
+            </h2>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.92rem' }}>
+              Here's what's fresh and harvested straight from our certified partner farms today.
+            </p>
+          </div>
+
           <div className="grid-main">
-            {/* Left sidebar: Shopping Cart */}
-            <div>
-              <div className="glass-panel cart-panel">
-                <h3 style={{ fontSize: '1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>🛒 Basket</span>
-                  <span className="status-pill status-delivered" style={{ fontSize: '0.75rem' }}>{cart.length} items</span>
-                </h3>
-                
-                {cart.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', textAlign: 'center', padding: '1.5rem 0' }}>
-                    Your basket is empty. Browse catalog to add items.
-                  </p>
-                ) : (
-                  <>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
-                      {cart.map(item => (
-                        <div key={item.product_id} className="cart-item">
-                          <div className="cart-item-details">
-                            <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.name}</span>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--accent-mint)', fontWeight: 600 }}>
-                              ${item.price} each
-                            </span>
-                          </div>
-                          
-                          <div className="cart-item-actions">
-                            <button className="qty-btn" onClick={() => updateCartQty(item.product_id, -1, item.stock_quantity)}>-</button>
-                            <span style={{ minWidth: '20px', textAlign: 'center', fontSize: '0.9rem' }}>{item.quantity}</span>
-                            <button className="qty-btn" onClick={() => updateCartQty(item.product_id, 1, item.stock_quantity)}>+</button>
-                          </div>
-                        </div>
-                      ))}
+            {/* Slide-in cart drawer */}
+            {isCartOpen && (
+              <>
+                <div className="cart-drawer-overlay" onClick={() => setIsCartOpen(false)} />
+                <div className="cart-drawer">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
+                    <h3 style={{ fontSize: '1.4rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>🛒 Basket</h3>
+                    <button className="btn btn-secondary btn-sm" onClick={() => setIsCartOpen(false)}>Close</button>
+                  </div>
+                  
+                  {cart.length === 0 ? (
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {renderEmptyState('Basket is empty', 'Add organic produce from the catalog')}
                     </div>
-
-                    <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '0.5rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.05rem', marginBottom: '1rem' }}>
-                        <span>Total:</span>
-                        <span style={{ color: 'var(--accent-mint)' }}>
-                          ${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
-                        </span>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
+                        {cart.map(item => (
+                          <div key={item.product_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: '#FAFAF7', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>{item.name}</span>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--color-mint)', fontWeight: 600, marginTop: '2px' }}>
+                                ${item.price} each
+                              </span>
+                            </div>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', borderRadius: '8px' }} onClick={() => updateCartQty(item.product_id, -1, item.stock_quantity)}>-</button>
+                              <span style={{ minWidth: '18px', textAlign: 'center', fontSize: '0.88rem', fontWeight: 600 }}>{item.quantity}</span>
+                              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', borderRadius: '8px' }} onClick={() => updateCartQty(item.product_id, 1, item.stock_quantity)}>+</button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <button className="btn btn-primary" onClick={handleCheckout} style={{ width: '100%' }}>
-                        Checkout Securely
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
 
-            {/* Right main area: Tabs content */}
+                      <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem', marginTop: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.1rem', marginBottom: '1.25rem' }}>
+                          <span style={{ color: 'var(--color-text-primary)' }}>Grand Total:</span>
+                          <span style={{ color: 'var(--color-forest)' }}>
+                            ${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+                          </span>
+                        </div>
+                        <button className="btn btn-primary" onClick={handleCheckout} style={{ width: '100%', display: 'block' }}>
+                          Checkout Securely
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Catalog list tab */}
             <div>
               {activeTab === 'marketplace' && (
                 <div>
-                  {/* Filters Bar */}
-                  <div className="glass-panel" style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', padding: '1rem' }}>
-                    <div style={{ flex: 1, minWidth: '200px' }}>
+                  {/* Category filters & Search in unified row */}
+                  <div className="organic-card" style={{ marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', width: '100%' }}>
                       <input 
                         type="text" 
                         className="form-control" 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search crops, produce, dairy..." 
+                        placeholder="🔍 Search crops, organic vegetables, dairy..." 
                       />
                     </div>
                     
-                    <div>
-                      <select 
-                        className="form-control"
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        style={{ minWidth: '150px' }}
-                      >
-                        <option value="All">All Categories</option>
-                        <option value="Vegetables">Vegetables</option>
-                        <option value="Fruits">Fruits</option>
-                        <option value="Dairy">Dairy</option>
-                        <option value="Grains">Grains</option>
-                      </select>
+                    {/* Filter chips selector */}
+                    <div className="category-chips">
+                      {['All', 'Vegetables', 'Fruits', 'Dairy', 'Grains'].map(cat => (
+                        <button 
+                          key={cat} 
+                          type="button" 
+                          className={`chip-btn ${selectedCategory === cat ? 'active' : ''}`}
+                          onClick={() => setSelectedCategory(cat)}
+                        >
+                          {cat}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
                   {/* Products Grid */}
                   {products.length === 0 ? (
-                    <div className="glass-panel" style={{ textAlign: 'center', padding: '3rem' }}>
-                      <p style={{ color: 'var(--text-secondary)' }}>No items found matching your filters in current market catalog.</p>
+                    <div className="organic-card" style={{ display: 'flex', justifyContent: 'center' }}>
+                      {renderEmptyState('No fresh crops found', 'Try adjusting your search query or filter chips')}
                     </div>
                   ) : (
                     <div className="product-grid">
                       {products.map(prod => (
-                        <div key={prod.product_id} className="glass-panel product-card hover-glow">
+                        <div key={prod.product_id} className="organic-card product-card hover-glow">
                           <span className="category-badge">{prod.category}</span>
                           <img 
                             className="product-image" 
-                            src={prod.image_url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400'} 
+                            src={prod.image_url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400'} 
                             alt={prod.name} 
                           />
                           <h4 className="product-title">{prod.name}</h4>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
-                            Farm: <strong>{prod.farmer_farm_name}</strong>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', display: 'block', marginBottom: '0.75rem' }}>
+                            Farm: <strong style={{ color: 'var(--color-forest)' }}>{prod.farmer_farm_name}</strong>
                           </span>
                           
-                          <div className="product-meta">
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', borderTop: '1px solid var(--color-border)', paddingTop: '0.75rem' }}>
                             <div>
                               <div className="price-tag">${prod.price}</div>
-                              <div className="stock-tag">{prod.stock_quantity} available</div>
+                              <div className="stock-tag">{prod.stock_quantity} remaining</div>
                             </div>
                             
                             <div style={{ display: 'flex', gap: '0.4rem' }}>
                               <button 
                                 className="btn btn-secondary btn-sm"
                                 onClick={() => openReviewsModal(prod)}
+                                style={{ padding: '0.4rem 0.6rem' }}
                                 title="Read Reviews"
                               >
                                 ⭐
@@ -1078,7 +1171,7 @@ function App() {
                                 onClick={() => addToCart(prod)}
                                 disabled={prod.stock_quantity === 0}
                               >
-                                {prod.stock_quantity === 0 ? 'Out of stock' : 'Add'}
+                                {prod.stock_quantity === 0 ? 'Sold Out' : 'Add to Cart'}
                               </button>
                             </div>
                           </div>
@@ -1089,73 +1182,78 @@ function App() {
                 </div>
               )}
 
+              {/* Recommendations Horizontal Scroll Row */}
               {activeTab === 'recommendations' && (
                 <div>
-                  <div className="glass-panel" style={{ marginBottom: '1.5rem' }}>
-                    <h3 className="gradient-text" style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-                      ⚙️ Predictive Supply Chain Analytics
+                  <div className="organic-card" style={{ marginBottom: '2rem' }}>
+                    <h3 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', color: 'var(--color-forest)', fontFamily: 'var(--font-heading)' }}>
+                      ✨ Personalized Produce Pairings
                     </h3>
-                    <p style={{ fontSize: '0.88rem', color: 'var(--text-body)', lineHeight: 1.6 }}>
-                      Our automated demand analytics engine processes co-occurrence pairings from historic orders across the marketplace. 
-                      Using a <strong>Jaccard Similarity Index</strong>, the system identifies real-time catalog pairings matching your previous 
-                      procurements to suggest optimal restock items.
+                    <p style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+                      Based on crops you and similar consumers have selected in the past, our demand algorithms recommend these co-occurring pairings harvested fresh this morning.
                     </p>
                   </div>
 
-                  <div className="product-grid">
-                    {recommendations.map((rec, index) => {
-                      const prod = rec.product;
-                      return (
-                        <div key={prod.product_id} className="glass-panel product-card hover-glow" style={{ borderTop: index < 3 ? '2px solid var(--accent-mint)' : '' }}>
-                          <div className="recommendations-header">
-                            <span className="category-badge">{prod.category}</span>
-                            <span className="similarity-score-badge">Match: {(rec.score * 100).toFixed(0)}%</span>
-                          </div>
-                          
-                          <img 
-                            className="product-image" 
-                            src={prod.image_url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400'} 
-                            alt={prod.name} 
-                          />
-                          <h4 className="product-title">{prod.name}</h4>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
-                            Farm: <strong>{prod.farmer_farm_name}</strong>
-                          </span>
-                          
-                          <div className="product-meta">
-                            <div>
-                              <div className="price-tag">${prod.price}</div>
-                              <div className="stock-tag">{prod.stock_quantity} available</div>
+                  {recommendations.length === 0 ? (
+                    <div className="organic-card" style={{ display: 'flex', justifyContent: 'center' }}>
+                      {renderEmptyState('No recommendations yet', 'Add items to your basket and complete a purchase to generate demand pairings!')}
+                    </div>
+                  ) : (
+                    <div className="recommendations-scroll-container">
+                      {recommendations.map((rec, index) => {
+                        const prod = rec.product;
+                        return (
+                          <div key={prod.product_id} className="organic-card recommendation-card hover-glow" style={{ borderTop: '4px solid var(--color-mint)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                              <span className="category-badge" style={{ margin: 0 }}>{prod.category}</span>
+                              <span className="role-badge" style={{ background: '#E8F5E9', color: 'var(--color-forest)' }}>
+                                {(rec.score * 100).toFixed(0)}% Match
+                              </span>
                             </div>
                             
-                            <button 
-                              className="btn btn-primary btn-sm" 
-                              onClick={() => addToCart(prod)}
-                              disabled={prod.stock_quantity === 0}
-                            >
-                              Add suggested
-                            </button>
+                            <img 
+                              className="product-image" 
+                              style={{ height: '140px' }}
+                              src={prod.image_url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400'} 
+                              alt={prod.name} 
+                            />
+                            <h4 className="product-title" style={{ fontSize: '1.1rem' }}>{prod.name}</h4>
+                            <span style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
+                              Farm: {prod.farmer_farm_name}
+                            </span>
+                            
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '0.6rem' }}>
+                              <span className="price-tag" style={{ fontSize: '1.1rem' }}>${prod.price}</span>
+                              <button 
+                                className="btn btn-primary btn-sm" 
+                                onClick={() => addToCart(prod)}
+                                disabled={prod.stock_quantity === 0}
+                              >
+                                {prod.stock_quantity === 0 ? 'Out' : '+ Add'}
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
+              {/* Order History */}
               {activeTab === 'history' && (
-                <div className="glass-panel">
-                  <h3 style={{ marginBottom: '1.5rem' }}>Your Past Orders</h3>
+                <div className="organic-card">
+                  <h3 style={{ marginBottom: '1.5rem', fontFamily: 'var(--font-heading)' }}>Your Past Orders</h3>
                   {orderHistory.length === 0 ? (
-                    <p style={{ color: 'var(--text-secondary)' }}>You haven't placed any orders yet.</p>
+                    renderEmptyState('No orders placed yet', 'Browse our catalog and make your first fresh delivery')
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                       {orderHistory.map(order => (
-                        <div key={order.order_id} style={{ border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1rem', background: 'rgba(255,255,255,0.01)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+                        <div key={order.order_id} style={{ border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1.25rem', background: '#FAFAF7' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.6rem' }}>
                             <div>
-                              <strong style={{ fontSize: '1rem' }}>Order #{order.order_id}</strong>
-                              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '1rem' }}>
+                              <strong style={{ fontSize: '1rem', color: 'var(--color-forest)' }}>Order #{order.order_id}</strong>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginLeft: '1rem' }}>
                                 {new Date(order.created_at).toLocaleDateString()}
                               </span>
                             </div>
@@ -1166,14 +1264,14 @@ function App() {
                             {order.items.map(item => (
                               <div key={item.order_item_id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                                 <span>{item.product.name} (x{item.quantity})</span>
-                                <span style={{ color: 'var(--text-secondary)' }}>${(item.price * item.quantity).toFixed(2)}</span>
+                                <span style={{ color: 'var(--color-text-secondary)' }}>${(item.price * item.quantity).toFixed(2)}</span>
                               </div>
                             ))}
                           </div>
 
-                          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed var(--border-color)', marginTop: '0.75rem', paddingTop: '0.75rem', fontWeight: 700, fontSize: '0.95rem' }}>
-                            <span>Total Price:</span>
-                            <span style={{ color: 'var(--accent-mint)' }}>${parseFloat(order.total_price).toFixed(2)}</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed var(--color-border)', marginTop: '0.75rem', paddingTop: '0.75rem', fontWeight: 700, fontSize: '0.95rem' }}>
+                            <span style={{ color: 'var(--color-text-primary)' }}>Total Price:</span>
+                            <span style={{ color: 'var(--color-forest)' }}>${parseFloat(order.total_price).toFixed(2)}</span>
                           </div>
                         </div>
                       ))}
@@ -1205,47 +1303,76 @@ function App() {
             </button>
           </div>
 
+          {/* Stats metrics row at top */}
+          <div className="stats-grid-row">
+            <div className="stat-card">
+              <div className="stat-icon-wrapper" style={{ background: '#E8F5E9', color: 'var(--color-forest)' }}>🌽</div>
+              <div>
+                <div className="stat-value">{farmerProducts.length}</div>
+                <div className="stat-label">Listed Products</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon-wrapper" style={{ background: '#E3F2FD', color: '#1E88E5' }}>📦</div>
+              <div>
+                <div className="stat-value">{farmerOrders.filter(o => o.status !== 'delivered').length}</div>
+                <div className="stat-label">Active Orders</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon-wrapper" style={{ background: '#FFF3E0', color: '#EF6C00' }}>💰</div>
+              <div>
+                <div className="stat-value" style={{ fontSize: '1.8rem' }}>
+                  ${farmerOrders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + parseFloat(o.total_price), 0).toFixed(2)}
+                </div>
+                <div className="stat-label">Revenue This Month</div>
+              </div>
+            </div>
+          </div>
+
           {activeTab === 'listings' && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h3 className="gradient-text" style={{ fontSize: '1.3rem' }}>Crops & Produce Inventory</h3>
+                <h3 style={{ fontSize: '1.4rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>Crops & Produce Catalog</h3>
                 <button className="btn btn-primary btn-sm" onClick={handleOpenAddProduct}>
                   + Add New Produce
                 </button>
               </div>
 
               {farmerProducts.length === 0 ? (
-                <div className="glass-panel" style={{ textAlign: 'center', padding: '3rem' }}>
-                  <p style={{ color: 'var(--text-secondary)' }}>Your product catalog is empty. Click "+ Add New Produce" above to create some.</p>
+                <div className="organic-card" style={{ display: 'flex', justifyContent: 'center' }}>
+                  {renderEmptyState('No crops listed yet', 'Click the "+ Add New Produce" button above to publish your first crop')}
                 </div>
               ) : (
                 <div className="product-grid">
                   {farmerProducts.map(prod => (
-                    <div key={prod.product_id} className="glass-panel product-card">
+                    <div key={prod.product_id} className="organic-card product-card hover-glow">
                       <span className="category-badge">{prod.category}</span>
                       <img 
                         className="product-image" 
-                        src={prod.image_url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400'} 
+                        src={prod.image_url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400'} 
                         alt={prod.name} 
                       />
                       <h4 className="product-title">{prod.name}</h4>
                       
-                      <div className="product-meta">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', borderTop: '1px solid var(--color-border)', paddingTop: '0.75rem' }}>
                         <div>
                           <div className="price-tag">${prod.price}</div>
-                          <div className="stock-tag">{prod.stock_quantity} kg/units remaining</div>
+                          <div className="stock-tag">{prod.stock_quantity} available</div>
                         </div>
                         
                         <div style={{ display: 'flex', gap: '0.4rem' }}>
                           <button 
                             className="btn btn-secondary btn-sm"
                             onClick={() => handleOpenEditProduct(prod)}
+                            style={{ padding: '0.4rem 0.8rem' }}
                           >
                             Edit
                           </button>
                           <button 
                             className="btn btn-danger btn-sm"
                             onClick={() => handleDeleteProduct(prod.product_id)}
+                            style={{ padding: '0.4rem 0.8rem' }}
                           >
                             Delete
                           </button>
@@ -1259,80 +1386,79 @@ function App() {
           )}
 
           {activeTab === 'incoming' && (
-            <div className="glass-panel">
-              <h3 style={{ marginBottom: '1.5rem' }}>Orders Awaiting Shipment</h3>
+            <div className="organic-card">
+              <h3 style={{ marginBottom: '1.25rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>Incoming Order Ledger</h3>
               
               {farmerOrders.length === 0 ? (
-                <p style={{ color: 'var(--text-secondary)' }}>No orders have been placed for your products yet.</p>
+                renderEmptyState('No active orders received', 'Orders placed by B2B/B2C buyers will automatically appear here')
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  {farmerOrders.map(order => (
-                    <div key={order.order_id} style={{ border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1.25rem', background: 'rgba(255,255,255,0.01)' }}>
-                      
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
-                        <div>
-                          <strong>Order #{order.order_id}</strong>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '1rem' }}>
-                            Customer: <strong>{order.buyer_name}</strong>
-                          </span>
-                        </div>
-                        
-                        <div>
-                          <span className={`status-pill status-${order.status}`} style={{ marginRight: '1rem' }}>{order.status}</span>
-                        </div>
-                      </div>
-
-                      {/* Display items for this farmer */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-                        {order.items.map(item => (
-                          <div key={item.order_item_id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                            <span>🥬 {item.product.name} (x{item.quantity})</span>
-                            <span>${(item.price * item.quantity).toFixed(2)}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--border-color)', paddingTop: '0.75rem' }}>
-                        <div style={{ fontSize: '0.9rem' }}>
-                          Earnings: <strong style={{ color: 'var(--accent-mint)' }}>${parseFloat(order.total_price).toFixed(2)}</strong>
-                        </div>
-                        
-                        {/* Status controls */}
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          {order.status === 'pending' && (
-                            <button 
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleUpdateOrderStatus(order.order_id, 'confirmed')}
-                            >
-                              Confirm Order
-                            </button>
-                          )}
-                          {order.status === 'confirmed' && (
-                            <button 
-                              className="btn btn-primary btn-sm"
-                              style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)', color: '#fff' }}
-                              onClick={() => handleUpdateOrderStatus(order.order_id, 'shipped')}
-                            >
-                              Ship Cargo 🚀
-                            </button>
-                          )}
-                          {order.status === 'shipped' && (
-                            <button 
-                              className="btn btn-secondary btn-sm"
-                              style={{ borderColor: 'var(--accent-emerald)', color: 'var(--accent-mint)' }}
-                              onClick={() => handleUpdateOrderStatus(order.order_id, 'delivered')}
-                            >
-                              Mark Delivered ✅
-                            </button>
-                          )}
-                          {order.status === 'delivered' && (
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Transaction completed</span>
-                          )}
-                        </div>
-                      </div>
-
-                    </div>
-                  ))}
+                <div className="data-table-container">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Order ID</th>
+                        <th>Buyer Client</th>
+                        <th>Harvested Cargo</th>
+                        <th>Fulfillment Earnings</th>
+                        <th>Transit Status</th>
+                        <th style={{ textAlign: 'right' }}>Logistics Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {farmerOrders.map(order => (
+                        <tr key={order.order_id}>
+                          <td><strong>#{order.order_id}</strong></td>
+                          <td>{order.buyer_name}</td>
+                          <td>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              {order.items.map(item => (
+                                <span key={item.order_item_id} style={{ fontSize: '0.82rem' }}>
+                                  {item.product.name} (x{item.quantity})
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td style={{ color: 'var(--color-forest)', fontWeight: 700 }}>
+                            ${parseFloat(order.total_price).toFixed(2)}
+                          </td>
+                          <td>
+                            <span className={`status-pill status-${order.status}`}>{order.status}</span>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            {order.status === 'pending' && (
+                              <button 
+                                className="btn btn-primary btn-sm"
+                                onClick={() => handleUpdateOrderStatus(order.order_id, 'confirmed')}
+                              >
+                                Confirm Order
+                              </button>
+                            )}
+                            {order.status === 'confirmed' && (
+                              <button 
+                                className="btn btn-primary btn-sm"
+                                style={{ backgroundColor: '#8B5CF6', boxShadow: 'none' }}
+                                onClick={() => handleUpdateOrderStatus(order.order_id, 'shipped')}
+                              >
+                                Ship Cargo 🚀
+                              </button>
+                            )}
+                            {order.status === 'shipped' && (
+                              <button 
+                                className="btn btn-secondary btn-sm"
+                                style={{ borderColor: 'var(--color-mint)', color: 'var(--color-forest)' }}
+                                onClick={() => handleUpdateOrderStatus(order.order_id, 'delivered')}
+                              >
+                                Mark Delivered ✅
+                              </button>
+                            )}
+                            {order.status === 'delivered' && (
+                              <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Completed</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -1342,362 +1468,397 @@ function App() {
 
       {/* --- ADMIN PORTAL VIEW --- */}
       {role === 'admin' && (
-        <div>
-          {/* Sub Navigation */}
-          <div className="nav-tabs" style={{ marginBottom: '2rem', display: 'inline-flex' }}>
+        <div className="admin-layout-container">
+          {/* Sidebar Navigation */}
+          <aside className="admin-sidebar">
+            <h4 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-forest)', padding: '0.5rem 1rem 1rem 1rem', borderBottom: '1px solid var(--color-border)', marginBottom: '0.5rem' }}>
+              System Control
+            </h4>
             <button 
-              className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
+              className={`admin-sidebar-btn ${activeTab === 'stats' ? 'active' : ''}`}
               onClick={() => setActiveTab('stats')}
             >
-              📊 System Stats
+              📊 Core Overview
             </button>
             <button 
-              className={`tab-btn ${activeTab === 'markets' ? 'active' : ''}`}
+              className={`admin-sidebar-btn ${activeTab === 'markets' ? 'active' : ''}`}
               onClick={() => setActiveTab('markets')}
             >
-              🏢 Markets Management
+              🏢 Local Markets
             </button>
             <button 
-              className={`tab-btn ${activeTab === 'farmers' ? 'active' : ''}`}
+              className={`admin-sidebar-btn ${activeTab === 'farmers' ? 'active' : ''}`}
               onClick={() => setActiveTab('farmers')}
             >
-              🚜 Farmer Assignment
+              🚜 Farm Assigns
             </button>
             <button 
-              className={`tab-btn ${activeTab === 'dbms' ? 'active' : ''}`}
+              className={`admin-sidebar-btn ${activeTab === 'dbms' ? 'active' : ''}`}
               onClick={() => setActiveTab('dbms')}
             >
-              ⚙️ Security Audit Ledger
+              🔒 System Logs
             </button>
-          </div>
+          </aside>
 
-          {activeTab === 'stats' && (
-            <div>
-              {adminStats && (
-                <div className="grid-3" style={{ marginBottom: '2rem' }}>
-                  <div className="glass-panel stat-card">
-                    <div className="stat-value">{adminStats.total_revenue ? `$${parseFloat(adminStats.total_revenue).toFixed(2)}` : '$0.00'}</div>
-                    <div className="stat-label">Total Revenue</div>
+          {/* Admin Main content */}
+          <main className="admin-content">
+            {activeTab === 'stats' && (
+              <div>
+                {adminStats && (
+                  <div className="stats-grid-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                    <div className="stat-card">
+                      <div style={{ flex: 1 }}>
+                        <div className="stat-value">
+                          {adminStats.total_revenue ? `$${parseFloat(adminStats.total_revenue).toFixed(2)}` : '$0.00'}
+                        </div>
+                        <div className="stat-label">Total Pipeline Revenue</div>
+                      </div>
+                      <div className="sparkline-container">
+                        <div className="sparkline-bar" style={{ height: '30%' }} />
+                        <div className="sparkline-bar" style={{ height: '55%' }} />
+                        <div className="sparkline-bar" style={{ height: '40%' }} />
+                        <div className="sparkline-bar" style={{ height: '75%' }} />
+                        <div className="sparkline-bar" style={{ height: '90%' }} />
+                      </div>
+                    </div>
+                    <div className="stat-card">
+                      <div style={{ flex: 1 }}>
+                        <div className="stat-value">{adminStats.total_orders}</div>
+                        <div className="stat-label">Dispatched Orders</div>
+                      </div>
+                      <div className="sparkline-container">
+                        <div className="sparkline-bar orange" style={{ height: '20%' }} />
+                        <div className="sparkline-bar orange" style={{ height: '45%' }} />
+                        <div className="sparkline-bar orange" style={{ height: '70%' }} />
+                        <div className="sparkline-bar orange" style={{ height: '50%' }} />
+                        <div className="sparkline-bar orange" style={{ height: '85%' }} />
+                      </div>
+                    </div>
+                    <div className="stat-card">
+                      <div style={{ flex: 1 }}>
+                        <div className="stat-value">{adminStats.total_farmers}</div>
+                        <div className="stat-label">Connected Farms</div>
+                      </div>
+                      <div className="sparkline-container">
+                        <div className="sparkline-bar" style={{ height: '40%' }} />
+                        <div className="sparkline-bar" style={{ height: '30%' }} />
+                        <div className="sparkline-bar" style={{ height: '60%' }} />
+                        <div className="sparkline-bar" style={{ height: '80%' }} />
+                        <div className="sparkline-bar" style={{ height: '95%' }} />
+                      </div>
+                    </div>
                   </div>
-                  <div className="glass-panel stat-card">
-                    <div className="stat-value">{adminStats.total_orders}</div>
-                    <div className="stat-label">Total Placed Orders</div>
-                  </div>
-                  <div className="glass-panel stat-card">
-                    <div className="stat-value">{adminStats.total_farmers}</div>
-                    <div className="stat-label">Registered Farmers</div>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {/* Global order logs */}
-              <div className="glass-panel">
-                <h3 style={{ marginBottom: '1.25rem' }}>Global Order Book</h3>
-                <div className="data-table-container">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Buyer</th>
-                        <th>Total Value</th>
-                        <th>Created At</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {adminOrders.map(order => (
-                        <tr key={order.order_id}>
-                          <td><strong>#{order.order_id}</strong></td>
-                          <td>{order.buyer_name}</td>
-                          <td>${parseFloat(order.total_price).toFixed(2)}</td>
-                          <td>{new Date(order.created_at).toLocaleString()}</td>
-                          <td>
-                            <span className={`status-pill status-${order.status}`}>{order.status}</span>
-                          </td>
+                {/* Global order logs */}
+                <div className="organic-card">
+                  <h3 style={{ marginBottom: '1.25rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>Global Order Book</h3>
+                  <div className="data-table-container">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Order ID</th>
+                          <th>Buyer</th>
+                          <th>Total Value</th>
+                          <th>Created At</th>
+                          <th>Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {adminOrders.map(order => (
+                          <tr key={order.order_id}>
+                            <td><strong>#{order.order_id}</strong></td>
+                            <td>{order.buyer_name}</td>
+                            <td style={{ fontWeight: 600 }}>${parseFloat(order.total_price).toFixed(2)}</td>
+                            <td style={{ color: 'var(--color-text-secondary)' }}>{new Date(order.created_at).toLocaleString()}</td>
+                            <td>
+                              <span className={`status-pill status-${order.status}`}>{order.status}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {activeTab === 'markets' && (
-            <div className="grid-main">
-              {/* Left Side: Create Market */}
-              <div>
-                <div className="glass-panel">
-                  <h3 style={{ marginBottom: '1.2rem' }}>Launch New Market</h3>
-                  <form onSubmit={handleCreateMarket}>
-                    <div className="form-group">
+            {activeTab === 'markets' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* Create Market Form */}
+                <div className="organic-card">
+                  <h3 style={{ marginBottom: '1.2rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>Launch New Local Market</h3>
+                  <form onSubmit={handleCreateMarket} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr) auto', gap: '1rem', alignItems: 'end' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label">Market Name</label>
                       <input 
                         type="text" 
                         className="form-control" 
                         value={marketFormName}
                         onChange={(e) => setMarketFormName(e.target.value)}
-                        placeholder="e.g. City Greenfield Market" 
+                        placeholder="City Greenfield Market" 
                         required 
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label">Location Address</label>
                       <input 
                         type="text" 
                         className="form-control" 
                         value={marketFormLocation}
                         onChange={(e) => setMarketFormLocation(e.target.value)}
-                        placeholder="e.g. 5th Main Avenue, North Sector" 
+                        placeholder="5th Main Avenue, North Sector" 
                         required 
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label">Operating Days</label>
                       <input 
                         type="text" 
                         className="form-control" 
                         value={marketFormDays}
                         onChange={(e) => setMarketFormDays(e.target.value)}
-                        placeholder="e.g. Mon, Wed, Sat" 
+                        placeholder="Mon, Wed, Sat" 
                         required 
                       />
                     </div>
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
+                    <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem 1.5rem' }}>
                       Establish Market
                     </button>
                   </form>
                 </div>
-              </div>
 
-              {/* Right Side: Markets List */}
-              <div className="glass-panel">
-                <h3 style={{ marginBottom: '1.2rem' }}>Current Active Markets</h3>
-                <div className="data-table-container">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Market ID</th>
-                        <th>Name</th>
-                        <th>Location</th>
-                        <th>Days Open</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {adminMarkets.map(m => (
-                        <tr key={m.market_id}>
-                          <td><strong>#{m.market_id}</strong></td>
-                          <td>{m.name}</td>
-                          <td>{m.location}</td>
-                          <td>{m.open_days}</td>
-                          <td>
-                            <button className="btn btn-danger btn-sm" onClick={() => handleDeleteMarket(m.market_id)}>Delete</button>
-                          </td>
+                {/* Markets List */}
+                <div className="organic-card">
+                  <h3 style={{ marginBottom: '1.2rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>Current Active Markets</h3>
+                  <div className="data-table-container">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Market ID</th>
+                          <th>Name</th>
+                          <th>Location</th>
+                          <th>Days Open</th>
+                          <th style={{ textAlign: 'right' }}>Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'farmers' && (
-            <div className="grid-main">
-              {/* Left Form: Assign farmer */}
-              <div className="glass-panel">
-                <h3 style={{ marginBottom: '1.2rem' }}>Link Farmer to Market Location</h3>
-                <form onSubmit={handleAssignFarmer}>
-                  <div className="form-group">
-                    <label className="form-label">Select Farmer Farm</label>
-                    <select 
-                      className="form-control" 
-                      value={assignFarmerId} 
-                      onChange={(e) => setAssignFarmerId(e.target.value)}
-                      required
-                    >
-                      <option value="">-- Select Farmer --</option>
-                      {adminFarmers.map(f => (
-                        <option key={f.farmer_id} value={f.farmer_id}>{f.farm_name} (ID: {f.farmer_id})</option>
-                      ))}
-                    </select>
+                      </thead>
+                      <tbody>
+                        {adminMarkets.map(m => (
+                          <tr key={m.market_id}>
+                            <td><strong>#{m.market_id}</strong></td>
+                            <td style={{ fontWeight: 600 }}>{m.name}</td>
+                            <td>{m.location}</td>
+                            <td>{m.open_days}</td>
+                            <td style={{ textAlign: 'right' }}>
+                              <button className="btn btn-danger btn-sm" onClick={() => handleDeleteMarket(m.market_id)}>Disassemble</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
+                </div>
+              </div>
+            )}
 
-                  <div className="form-group">
-                    <label className="form-label">Assign to Market Place</label>
-                    <select 
-                      className="form-control" 
-                      value={assignMarketId} 
-                      onChange={(e) => setAssignMarketId(e.target.value)}
-                      required
-                    >
-                      <option value="">-- Select Market --</option>
-                      {adminMarkets.map(m => (
-                        <option key={m.market_id} value={m.market_id}>{m.name}</option>
-                      ))}
-                    </select>
+            {activeTab === 'farmers' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* Assign farmer */}
+                <div className="organic-card">
+                  <h3 style={{ marginBottom: '1.2rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>Link Farmer to Market Location</h3>
+                  <form onSubmit={handleAssignFarmer} style={{ display: 'flex', gap: '1.5rem', alignItems: 'end' }}>
+                    <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                      <label className="form-label">Select Certified Farm Partner</label>
+                      <select 
+                        className="form-control" 
+                        value={assignFarmerId} 
+                        onChange={(e) => setAssignFarmerId(e.target.value)}
+                        required
+                      >
+                        <option value="">-- Select Farmer --</option>
+                        {adminFarmers.map(f => (
+                          <option key={f.farmer_id} value={f.farmer_id}>{f.farm_name} (ID: {f.farmer_id})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                      <label className="form-label">Link to Local Market Hub</label>
+                      <select 
+                        className="form-control" 
+                        value={assignMarketId} 
+                        onChange={(e) => setAssignMarketId(e.target.value)}
+                        required
+                      >
+                        <option value="">-- Select Market --</option>
+                        {adminMarkets.map(m => (
+                          <option key={m.market_id} value={m.market_id}>{m.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button type="submit" className="btn btn-primary">
+                      Assign Partner
+                    </button>
+                  </form>
+                </div>
+
+                {/* Assigned Farmers */}
+                <div className="organic-card">
+                  <h3 style={{ marginBottom: '1.2rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>Registered Farm Directory</h3>
+                  <div className="data-table-container">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Farmer ID</th>
+                          <th>Farm Name</th>
+                          <th>Email Address</th>
+                          <th>Contact Phone</th>
+                          <th>Assigned Market Location</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {adminFarmers.map(f => (
+                          <tr key={f.farmer_id}>
+                            <td><strong>#{f.farmer_id}</strong></td>
+                            <td style={{ fontWeight: 600 }}>{f.farm_name}</td>
+                            <td>{f.email}</td>
+                            <td><code>{f.phone}</code></td>
+                            <td>
+                              {f.market_id ? (
+                                <span className="status-pill status-delivered">Market Hub #{f.market_id}</span>
+                              ) : (
+                                <span className="status-pill status-pending">Pending Assignment</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-
-                  <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
-                    Assign Farmer
-                  </button>
-                </form>
-              </div>
-
-              {/* Right Table: Assigned Farmers */}
-              <div className="glass-panel">
-                <h3 style={{ marginBottom: '1.2rem' }}>Registered Farmer Directory</h3>
-                <div className="data-table-container">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Farmer ID</th>
-                        <th>Farm Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Assigned Market ID</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {adminFarmers.map(f => (
-                        <tr key={f.farmer_id}>
-                          <td><strong>#{f.farmer_id}</strong></td>
-                          <td>{f.farm_name}</td>
-                          <td>{f.email}</td>
-                          <td>{f.phone}</td>
-                          <td>
-                            {f.market_id ? (
-                              <span className="status-pill status-delivered">Market #{f.market_id}</span>
-                            ) : (
-                              <span className="status-pill status-pending">Unassigned</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {activeTab === 'dbms' && (
-            <div>
-              {/* Supply Chain Audit Ledger */}
-              <div className="glass-panel" style={{ marginBottom: '2rem' }}>
-                <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>📊 Automated Supply Chain Action Ledger</span>
-                  <span className="spotlight-tag">Security Audit</span>
-                </h3>
-                <p style={{ fontSize: '0.88rem', color: 'var(--text-body)', marginBottom: '1rem' }}>
-                  This ledger archives automated data audits executed securely inside the database container. 
-                  Every lifecycle status update on dispatches triggers an instant, write-once ledger entry to ensure compliance and traceability.
-                </p>
+            {activeTab === 'dbms' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* Supply Chain Audit Ledger */}
+                <div className="organic-card">
+                  <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>
+                    <span>🛡️ Supply Chain Logistics Ledger</span>
+                    <span className="role-badge" style={{ fontSize: '0.65rem' }}>Write-Once Trigger Logs</span>
+                  </h3>
+                  <p style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)', marginBottom: '1.25rem' }}>
+                    This ledger displays real-time secure automated audit rows. Any status change on cargo dispatches updates a write-once ledger entry in MySQL to ensure absolute traceably secure supply chains.
+                  </p>
 
-                <div className="data-table-container">
-                  <table className="data-table" style={{ fontSize: '0.82rem' }}>
-                    <thead>
-                      <tr>
-                        <th>Log ID</th>
-                        <th>Auditor Ledger</th>
-                        <th>Action</th>
-                        <th>Target Dispatch ID</th>
-                        <th>Audit Details</th>
-                        <th>Timestamp</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {auditLogs.map(log => (
-                        <tr key={log.log_id}>
-                          <td><strong>#{log.log_id}</strong></td>
-                          <td><code style={{ color: 'var(--accent-mint)' }}>{log.trigger_name}</code></td>
-                          <td><span className="status-pill status-confirmed">{log.action_type}</span></td>
-                          <td>Order #{log.record_id}</td>
-                          <td style={{ color: '#e2e8f0' }}>{log.details}</td>
-                          <td style={{ color: 'var(--text-muted)' }}>{new Date(log.fired_at).toLocaleString()}</td>
+                  <div className="data-table-container">
+                    <table className="data-table" style={{ fontSize: '0.82rem' }}>
+                      <thead>
+                        <tr>
+                          <th>Log ID</th>
+                          <th>Secure Database Auditor</th>
+                          <th>Trigger Event</th>
+                          <th>Target ID</th>
+                          <th>Audit Details</th>
+                          <th>Fired Timestamp</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {auditLogs.map(log => (
+                          <tr key={log.log_id}>
+                            <td><strong>#{log.log_id}</strong></td>
+                            <td><code style={{ color: 'var(--color-forest)' }}>{log.trigger_name}</code></td>
+                            <td><span className="status-pill status-confirmed">{log.action_type}</span></td>
+                            <td>Order #{log.record_id}</td>
+                            <td>{log.details}</td>
+                            <td style={{ color: 'var(--color-text-secondary)' }}>{new Date(log.fired_at).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Broadcast Notification Queue */}
+                <div className="organic-card">
+                  <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>
+                    <span>📨 Customer Notification Broadcast Queue</span>
+                    <span className="role-badge" style={{ backgroundColor: '#E0F2F1', color: '#00796B', fontSize: '0.65rem' }}>Scheduler active</span>
+                  </h3>
+                  <p style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)', marginBottom: '1.25rem' }}>
+                    Automated background queue logs dispatch requests in real-time. An event poller continually processes the broadcast rows to send SMS/WhatsApp notifications on crop updates.
+                  </p>
+
+                  <div className="data-table-container">
+                    <table className="data-table" style={{ fontSize: '0.82rem' }}>
+                      <thead>
+                        <tr>
+                          <th>Queue ID</th>
+                          <th>Dispatch Target</th>
+                          <th>Recipient</th>
+                          <th>Generated Broadcast Notification</th>
+                          <th>Poller Status</th>
+                          <th>Queued Time</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {notificationQueue.map(item => (
+                          <tr key={item.notification_id}>
+                            <td><strong>#{item.notification_id}</strong></td>
+                            <td>Order #{item.order_id}</td>
+                            <td><code>{item.phone}</code></td>
+                            <td>{item.message}</td>
+                            <td>
+                              <span className={`status-pill status-${item.status === 'sent' ? 'delivered' : 'pending'}`}>
+                                {item.status}
+                              </span>
+                            </td>
+                            <td style={{ color: 'var(--color-text-secondary)' }}>{new Date(item.created_at).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-
-              {/* Broadcast Notification Queue */}
-              <div className="glass-panel">
-                <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>📨 Automated Customer Notification Broadcast Queue</span>
-                  <span className="spotlight-tag" style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#22d3ee' }}>Broadcast Poller</span>
-                </h3>
-                <p style={{ fontSize: '0.88rem', color: 'var(--text-body)', marginBottom: '1rem' }}>
-                  Logistics status changes automatically trigger queued messages for distribution. 
-                  An event-driven worker continually audits the queue and dispatches SMS/WhatsApp logistics updates to transport handlers and customers.
-                </p>
-
-                <div className="data-table-container">
-                  <table className="data-table" style={{ fontSize: '0.82rem' }}>
-                    <thead>
-                      <tr>
-                        <th>Queue ID</th>
-                        <th>Dispatch ID</th>
-                        <th>Recipient Phone</th>
-                        <th>Broadcast Message</th>
-                        <th>Broadcaster Status</th>
-                        <th>Queued At</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {notificationQueue.map(item => (
-                        <tr key={item.notification_id}>
-                          <td><strong>#{item.notification_id}</strong></td>
-                          <td>Order #{item.order_id}</td>
-                          <td><code>{item.phone}</code></td>
-                          <td style={{ color: '#e2e8f0' }}>{item.message}</td>
-                          <td>
-                            <span className={`status-pill status-${item.status === 'sent' ? 'delivered' : 'pending'}`}>
-                              {item.status}
-                            </span>
-                          </td>
-                          <td style={{ color: 'var(--text-muted)' }}>{new Date(item.created_at).toLocaleString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
+            )}
+          </main>
         </div>
       )}
 
-      {/* --- REVIEWS MODAL --- */}
+      {/* --- REVIEW MODAL (OVERLAY SHEET) --- */}
       {activeReviewProduct && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
-          <div className="glass-panel" style={{ width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
-              <h3 className="gradient-text" style={{ fontSize: '1.25rem' }}>{activeReviewProduct.name} - Reviews</h3>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.35rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>
+                {activeReviewProduct.name} - Reviews
+              </h3>
               <button className="btn btn-secondary btn-sm" onClick={() => setActiveReviewProduct(null)}>Close</button>
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <span className="category-badge" style={{ marginBottom: '0.5rem' }}>{activeReviewProduct.category}</span>
-              <div style={{ fontSize: '1.15rem', color: 'var(--accent-mint)', fontWeight: 700 }}>Price: ${activeReviewProduct.price}</div>
+            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="category-badge" style={{ margin: 0 }}>{activeReviewProduct.category}</span>
+              <div style={{ fontSize: '1.2rem', color: 'var(--color-text-primary)', fontWeight: 700 }}>
+                Price: ${activeReviewProduct.price}
+              </div>
             </div>
 
-            {/* Write a review (Only Buyers can review) */}
+            {/* Write a review form */}
             {role === 'buyer' && (
-              <form onSubmit={submitReview} style={{ border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.01)' }}>
-                <h4 style={{ fontSize: '0.95rem', marginBottom: '0.75rem' }}>Write a Review</h4>
-                {reviewError && <div style={{ color: '#fca5a5', fontSize: '0.8rem', marginBottom: '0.5rem' }}>Error: {reviewError}</div>}
+              <form onSubmit={submitReview} style={{ border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem', background: '#FAFAF7' }}>
+                <h4 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', color: 'var(--color-forest)', fontWeight: 600 }}>Write a Review</h4>
+                {reviewError && <div style={{ color: '#EF4444', fontSize: '0.8rem', marginBottom: '0.5rem' }}>Error: {reviewError}</div>}
                 
                 <div className="form-group">
-                  <label className="form-label">Rating (1 to 5 Stars)</label>
+                  <label className="form-label">Your Rating</label>
                   <select className="form-control" value={newRating} onChange={(e) => setNewRating(e.target.value)}>
-                    <option value="5">⭐⭐⭐⭐⭐ - 5 Stars</option>
-                    <option value="4">⭐⭐⭐⭐ - 4 Stars</option>
-                    <option value="3">⭐⭐⭐ - 3 Stars</option>
-                    <option value="2">⭐⭐ - 2 Stars</option>
-                    <option value="1">⭐ - 1 Star</option>
+                    <option value="5">⭐⭐⭐⭐⭐ - Exceptional</option>
+                    <option value="4">⭐⭐⭐⭐ - Very Good</option>
+                    <option value="3">⭐⭐⭐ - Good</option>
+                    <option value="2">⭐⭐ - Fair</option>
+                    <option value="1">⭐ - Poor</option>
                   </select>
                 </div>
 
@@ -1705,10 +1866,10 @@ function App() {
                   <label className="form-label">Review Description</label>
                   <textarea 
                     className="form-control" 
-                    rows="3" 
+                    rows="2" 
                     value={newComment} 
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Provide your experience with this farmer's crop..."
+                    placeholder="Provide your experience with this farmer's organic produce..."
                     required
                   ></textarea>
                 </div>
@@ -1720,19 +1881,21 @@ function App() {
             )}
 
             <div className="reviews-section">
-              <h4 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Customer Feedbacks</h4>
+              <h4 style={{ fontSize: '0.95rem', marginBottom: '1rem', color: 'var(--color-forest)', fontWeight: 600 }}>Customer Feedback</h4>
               {productReviews.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>No reviews posted for this item yet.</p>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.88rem' }}>No reviews posted for this item yet.</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {productReviews.map(rev => (
-                    <div key={rev.review_id} className="review-item">
-                      <div className="review-header">
-                        <strong>👤 {rev.buyer_name}</strong>
-                        <span className="stars">{'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}</span>
+                    <div key={rev.review_id} style={{ padding: '0.85rem', background: '#FAFAF7', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                        <strong style={{ fontSize: '0.88rem', color: 'var(--color-text-primary)' }}>👤 {rev.buyer_name}</strong>
+                        <span className="stars" style={{ color: '#F4A261' }}>
+                          {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
+                        </span>
                       </div>
-                      <p style={{ fontSize: '0.88rem', color: '#cbd5e1' }}>{rev.comment}</p>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem', textAlign: 'right' }}>
+                      <p style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeights: 1.4 }}>{rev.comment}</p>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem', textAlign: 'right' }}>
                         {new Date(rev.created_at).toLocaleDateString()}
                       </div>
                     </div>
@@ -1747,17 +1910,17 @@ function App() {
 
       {/* --- FARMER ADD/EDIT PRODUCT MODAL --- */}
       {showProductModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
-          <div className="glass-panel" style={{ width: '90%', maxWidth: '500px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
-              <h3 className="gradient-text" style={{ fontSize: '1.25rem' }}>
-                {editingProduct ? 'Modify Crop Listing' : 'List New Fresh Cargo'}
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.35rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>
+                {editingProduct ? 'Modify Crop Details' : 'List New Fresh Cargo'}
               </h3>
               <button className="btn btn-secondary btn-sm" onClick={() => setShowProductModal(false)}>Cancel</button>
             </div>
 
             {prodFormError && (
-              <div style={{ color: '#fca5a5', fontSize: '0.82rem', marginBottom: '0.75rem' }}>
+              <div style={{ color: '#EF4444', fontSize: '0.82rem', marginBottom: '0.75rem' }}>
                 Error: {prodFormError}
               </div>
             )}
@@ -1770,7 +1933,7 @@ function App() {
                   className="form-control" 
                   value={prodFormName} 
                   onChange={(e) => setProdFormName(e.target.value)} 
-                  placeholder="e.g. Sweet Organic Carrots" 
+                  placeholder="e.g. Honey Sweet Strawberries" 
                   required 
                 />
               </div>
@@ -1785,9 +1948,9 @@ function App() {
                 </select>
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Price per Unit ($)</label>
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                  <label className="form-label">Price ($ / Unit)</label>
                   <input 
                     type="number" 
                     step="0.01"
@@ -1795,12 +1958,12 @@ function App() {
                     className="form-control" 
                     value={prodFormPrice} 
                     onChange={(e) => setProdFormPrice(e.target.value)} 
-                    placeholder="e.g. 2.99" 
+                    placeholder="e.g. 3.49" 
                     required 
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group" style={{ flex: 1, margin: 0 }}>
                   <label className="form-label">Initial Stock Quantity</label>
                   <input 
                     type="number" 
@@ -1808,7 +1971,7 @@ function App() {
                     className="form-control" 
                     value={prodFormStock} 
                     onChange={(e) => setProdFormStock(e.target.value)} 
-                    placeholder="e.g. 100" 
+                    placeholder="e.g. 50" 
                     required 
                   />
                 </div>
@@ -1821,15 +1984,22 @@ function App() {
                   className="form-control" 
                   value={prodFormImage} 
                   onChange={(e) => setProdFormImage(e.target.value)} 
-                  placeholder="Paste direct URL to unsplash image" 
+                  placeholder="Paste direct Unsplash URL..." 
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
-                {editingProduct ? 'Save Crop Changes' : 'Launch Listing into Market'}
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem', display: 'block' }}>
+                {editingProduct ? 'Save Crop Changes' : 'Launch Crop Listing'}
               </button>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Floating Success/Toast Notification bottom-right */}
+      {toastMessage && (
+        <div className="toast-notification">
+          <span>✨</span> {toastMessage}
         </div>
       )}
 
