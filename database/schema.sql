@@ -33,6 +33,7 @@ CREATE TABLE BUYER (
     name VARCHAR(100) NOT NULL,
     phone VARCHAR(20) NOT NULL, -- e.g. "whatsapp:+919876543210" or just "+919876543210"
     address TEXT,
+    preferred_language VARCHAR(10) NOT NULL DEFAULT 'en',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -45,6 +46,7 @@ CREATE TABLE FARMER (
     farm_details TEXT,
     phone VARCHAR(20) NOT NULL,
     market_id INT,
+    preferred_language VARCHAR(10) NOT NULL DEFAULT 'en',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (market_id) REFERENCES MARKET(market_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
