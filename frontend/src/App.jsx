@@ -637,14 +637,14 @@ function App() {
   const renderEmptyState = (title, subtitle) => (
     <div className="empty-state">
       <svg className="empty-state-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="100" cy="100" r="80" fill="#F4F6F4" />
-        <path d="M70 90C70 73.4315 83.4315 60 100 60C116.569 60 130 73.4315 130 90V130H70V90Z" fill="#E2ECE9" />
+        <circle cx="100" cy="100" r="80" fill="#101A15" />
+        <path d="M70 90C70 73.4315 83.4315 60 100 60C116.569 60 130 73.4315 130 90V130H70V90Z" fill="#1B2E24" />
         <rect x="60" y="110" width="80" height="30" rx="10" fill="#2D6A4F" />
         <circle cx="90" cy="90" r="5" fill="#52B788" />
         <circle cx="110" cy="90" r="5" fill="#52B788" />
       </svg>
       <h4 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-forest)', fontSize: '1.2rem', marginBottom: '0.25rem' }}>{title}</h4>
-      <p style={{ fontSize: '0.88rem' }}>{subtitle}</p>
+      <p style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)' }}>{subtitle}</p>
     </div>
   );
 
@@ -683,7 +683,7 @@ function App() {
                 </h2>
                 
                 {loginError && (
-                  <div className="status-pill status-pending" style={{ width: '100%', color: '#D32F2F', background: '#FFEBEE', border: '1px solid #FFCDD2', textAlign: 'center', marginBottom: '1.25rem', padding: '0.6rem', display: 'block' }}>
+                  <div className="status-pill status-pending" style={{ width: '100%', color: '#FFA7A7', background: '#3E2723', border: '1px solid #FF8A80', textAlign: 'center', marginBottom: '1.25rem', padding: '0.6rem', display: 'block' }}>
                     {loginError}
                   </div>
                 )}
@@ -716,28 +716,28 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="floating-group">
+                  <div className="form-group">
+                    <label className="form-label">Email Address</label>
                     <input 
                       type="email" 
-                      className="floating-input" 
-                      placeholder=" "
+                      className="form-control" 
+                      placeholder="alice@buyer.com"
                       value={loginEmail} 
                       onChange={(e) => setLoginEmail(e.target.value)}
                       required 
                     />
-                    <label className="floating-label">Email Address</label>
                   </div>
 
-                  <div className="floating-group">
+                  <div className="form-group">
+                    <label className="form-label">Password</label>
                     <input 
                       type="password" 
-                      className="floating-input" 
-                      placeholder=" "
+                      className="form-control" 
+                      placeholder="••••••••"
                       value={loginPassword} 
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required 
                     />
-                    <label className="floating-label">Password</label>
                   </div>
 
                   <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem', display: 'block' }}>
@@ -792,7 +792,7 @@ function App() {
                         <span style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Certified Farm Partner</span>
                       </div>
                     </div>
-                    <span className="role-badge" style={{ backgroundColor: '#E0F2F1', color: '#00796B' }}>Farmer</span>
+                    <span className="role-badge" style={{ backgroundColor: '#004D40', color: '#4DB6AC' }}>Farmer</span>
                   </button>
 
                   <button 
@@ -807,7 +807,7 @@ function App() {
                         <span style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>System Logistics Console</span>
                       </div>
                     </div>
-                    <span className="role-badge" style={{ backgroundColor: '#FFF3E0', color: '#E65100' }}>Admin</span>
+                    <span className="role-badge" style={{ backgroundColor: '#3E2723', color: '#FFB74D' }}>Admin</span>
                   </button>
                 </div>
               </>
@@ -818,7 +818,7 @@ function App() {
                 </h2>
                 
                 {regError && (
-                  <div className="status-pill status-pending" style={{ width: '100%', color: '#D32F2F', background: '#FFEBEE', border: '1px solid #FFCDD2', textAlign: 'center', marginBottom: '1.25rem', padding: '0.6rem', display: 'block' }}>
+                  <div className="status-pill status-pending" style={{ width: '100%', color: '#FFA7A7', background: '#3E2723', border: '1px solid #FF8A80', textAlign: 'center', marginBottom: '1.25rem', padding: '0.6rem', display: 'block' }}>
                     {regError}
                   </div>
                 )}
@@ -844,65 +844,65 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="floating-group">
+                  <div className="form-group">
+                    <label className="form-label">{regRole === 'buyer' ? 'Full Name' : 'Farm Name'}</label>
                     <input 
                       type="text" 
-                      className="floating-input" 
-                      placeholder=" "
+                      className="form-control" 
+                      placeholder={regRole === 'buyer' ? 'Jane Doe' : 'Sunny Valley Farm'}
                       value={regName} 
                       onChange={(e) => setRegName(e.target.value)}
                       required 
                     />
-                    <label className="floating-label">{regRole === 'buyer' ? 'Full Name' : 'Farm Name'}</label>
                   </div>
 
-                  <div className="floating-group">
+                  <div className="form-group">
+                    <label className="form-label">Email Address</label>
                     <input 
                       type="email" 
-                      className="floating-input" 
-                      placeholder=" "
+                      className="form-control" 
+                      placeholder="name@example.com"
                       value={regEmail} 
                       onChange={(e) => setRegEmail(e.target.value)}
                       required 
                     />
-                    <label className="floating-label">Email Address</label>
                   </div>
 
-                  <div className="floating-group">
+                  <div className="form-group">
+                    <label className="form-label">Password</label>
                     <input 
                       type="password" 
-                      className="floating-input" 
-                      placeholder=" "
+                      className="form-control" 
+                      placeholder="••••••••"
                       value={regPassword} 
                       onChange={(e) => setRegPassword(e.target.value)}
                       minLength={6}
                       required 
                     />
-                    <label className="floating-label">Password (Min 6 chars)</label>
                   </div>
 
-                  <div className="floating-group">
+                  <div className="form-group">
+                    <label className="form-label">Phone Number</label>
                     <input 
                       type="text" 
-                      className="floating-input" 
-                      placeholder=" "
+                      className="form-control" 
+                      placeholder="+919876543210"
                       value={regPhone} 
                       onChange={(e) => setRegPhone(e.target.value)}
                       required 
                     />
-                    <label className="floating-label">Phone (e.g. +919876543210)</label>
                   </div>
 
                   {regRole === 'buyer' ? (
-                    <div className="floating-group">
+                    <div className="form-group">
+                      <label className="form-label">Delivery Address</label>
                       <input 
                         type="text" 
-                        className="floating-input" 
-                        placeholder=" "
+                        className="form-control" 
+                        placeholder="12 Pine Road, Sector 5"
                         value={regAddress} 
                         onChange={(e) => setRegAddress(e.target.value)}
                       />
-                      <label className="floating-label">Delivery Address</label>
                     </div>
                   ) : (
                     <div className="form-group">
@@ -961,19 +961,6 @@ function App() {
         </div>
 
         <div className="user-info">
-          {role === 'buyer' && (
-            <button 
-              className="btn btn-secondary btn-sm" 
-              onClick={() => setIsCartOpen(true)}
-              style={{ padding: '0.5rem 1.1rem', display: 'inline-flex', alignItems: 'center' }}
-            >
-              🛒 Basket 
-              <span className="role-badge" style={{ marginLeft: '6px', background: 'var(--color-forest)', color: '#FFFFFF', padding: '0.1rem 0.4rem', border: 'none' }}>
-                {cart.length}
-              </span>
-            </button>
-          )}
-          
           <div className="user-badge">
             <div className="user-avatar">{getInitials(userName)}</div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -1038,7 +1025,7 @@ function App() {
           </div>
 
           {/* Hero Welcome banner */}
-          <div className="organic-card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #F4F6F4 0%, #FAFAF7 100%)', borderLeft: '4px solid var(--color-forest)', padding: '1.5rem 2rem' }}>
+          <div className="organic-card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #101A15 0%, #16221C 100%)', borderLeft: '4px solid var(--color-forest)', padding: '1.5rem 2rem' }}>
             <h2 style={{ fontSize: '1.65rem', color: 'var(--color-forest)', fontFamily: 'var(--font-heading)', marginBottom: '0.35rem' }}>
               Good morning, {userName}!
             </h2>
@@ -1047,60 +1034,10 @@ function App() {
             </p>
           </div>
 
-          <div className="grid-main">
-            {/* Slide-in cart drawer */}
-            {isCartOpen && (
-              <>
-                <div className="cart-drawer-overlay" onClick={() => setIsCartOpen(false)} />
-                <div className="cart-drawer">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
-                    <h3 style={{ fontSize: '1.4rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>🛒 Basket</h3>
-                    <button className="btn btn-secondary btn-sm" onClick={() => setIsCartOpen(false)}>Close</button>
-                  </div>
-                  
-                  {cart.length === 0 ? (
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {renderEmptyState('Basket is empty', 'Add organic produce from the catalog')}
-                    </div>
-                  ) : (
-                    <>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
-                        {cart.map(item => (
-                          <div key={item.product_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: '#FAFAF7', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>{item.name}</span>
-                              <span style={{ fontSize: '0.78rem', color: 'var(--color-mint)', fontWeight: 600, marginTop: '2px' }}>
-                                ${item.price} each
-                              </span>
-                            </div>
-                            
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', borderRadius: '8px' }} onClick={() => updateCartQty(item.product_id, -1, item.stock_quantity)}>-</button>
-                              <span style={{ minWidth: '18px', textAlign: 'center', fontSize: '0.88rem', fontWeight: 600 }}>{item.quantity}</span>
-                              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', borderRadius: '8px' }} onClick={() => updateCartQty(item.product_id, 1, item.stock_quantity)}>+</button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem', marginTop: '1rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.1rem', marginBottom: '1.25rem' }}>
-                          <span style={{ color: 'var(--color-text-primary)' }}>Grand Total:</span>
-                          <span style={{ color: 'var(--color-forest)' }}>
-                            ${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
-                          </span>
-                        </div>
-                        <button className="btn btn-primary" onClick={handleCheckout} style={{ width: '100%', display: 'block' }}>
-                          Checkout Securely
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* Catalog list tab */}
+          {/* Persistent Two-Column Layout */}
+          <div className="grid-buyer-layout">
+            
+            {/* Left Column: Buyer Tabs content */}
             <div>
               {activeTab === 'marketplace' && (
                 <div>
@@ -1200,13 +1137,13 @@ function App() {
                     </div>
                   ) : (
                     <div className="recommendations-scroll-container">
-                      {recommendations.map((rec, index) => {
+                      {recommendations.map((rec) => {
                         const prod = rec.product;
                         return (
                           <div key={prod.product_id} className="organic-card recommendation-card hover-glow" style={{ borderTop: '4px solid var(--color-mint)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                               <span className="category-badge" style={{ margin: 0 }}>{prod.category}</span>
-                              <span className="role-badge" style={{ background: '#E8F5E9', color: 'var(--color-forest)' }}>
+                              <span className="role-badge" style={{ background: '#1B2E24', color: 'var(--color-forest)' }}>
                                 {(rec.score * 100).toFixed(0)}% Match
                               </span>
                             </div>
@@ -1249,7 +1186,7 @@ function App() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                       {orderHistory.map(order => (
-                        <div key={order.order_id} style={{ border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1.25rem', background: '#FAFAF7' }}>
+                        <div key={order.order_id} style={{ border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1.25rem', background: '#101A15' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.6rem' }}>
                             <div>
                               <strong style={{ fontSize: '1rem', color: 'var(--color-forest)' }}>Order #{order.order_id}</strong>
@@ -1280,6 +1217,64 @@ function App() {
                 </div>
               )}
             </div>
+
+            {/* Right Column: Permanent Shopping Basket Sidebar */}
+            <div className="organic-card cart-sidebar-panel">
+              <h3 style={{ fontSize: '1.4rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>🛒 Shopping Basket</span>
+                <span className="role-badge" style={{ background: 'var(--color-forest)', color: '#0C140F', border: 'none' }}>
+                  {cart.length} crops
+                </span>
+              </h3>
+
+              {cart.length === 0 ? (
+                <div style={{ flex: 1, padding: '2rem 0' }}>
+                  {renderEmptyState('Your Basket is Empty', 'Select organic produce on the left to add items to your cart')}
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', overflowY: 'auto', paddingRight: '4px', maxHeight: '380px', flex: 1 }}>
+                    {cart.map(item => (
+                      <div key={item.product_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: '#101A15', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '60%' }}>
+                          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {item.name}
+                          </span>
+                          <span style={{ fontSize: '0.78rem', color: 'var(--color-mint)', fontWeight: 600, marginTop: '2px' }}>
+                            ${item.price} each
+                          </span>
+                        </div>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', borderRadius: '8px' }} onClick={() => updateCartQty(item.product_id, -1, item.stock_quantity)}>-</button>
+                          <span style={{ minWidth: '18px', textAlign: 'center', fontSize: '0.88rem', fontWeight: 600 }}>{item.quantity}</span>
+                          <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', borderRadius: '8px' }} onClick={() => updateCartQty(item.product_id, 1, item.stock_quantity)}>+</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem', marginTop: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.1rem', marginBottom: '1.25rem' }}>
+                      <span style={{ color: 'var(--color-text-primary)' }}>Grand Total:</span>
+                      <span style={{ color: 'var(--color-forest)', fontSize: '1.2rem' }}>
+                        ${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+                      </span>
+                    </div>
+                    
+                    {/* Highly visible Proceed to Checkout CTA */}
+                    <button 
+                      className="btn btn-primary" 
+                      onClick={handleCheckout} 
+                      style={{ width: '100%', display: 'block', fontSize: '1rem', padding: '0.9rem 1.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                    >
+                      💳 Proceed to Checkout
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
           </div>
         </div>
       )}
@@ -1306,21 +1301,21 @@ function App() {
           {/* Stats metrics row at top */}
           <div className="stats-grid-row">
             <div className="stat-card">
-              <div className="stat-icon-wrapper" style={{ background: '#E8F5E9', color: 'var(--color-forest)' }}>🌽</div>
+              <div className="stat-icon-wrapper" style={{ background: '#1B2E24', color: 'var(--color-forest)' }}>🌽</div>
               <div>
                 <div className="stat-value">{farmerProducts.length}</div>
                 <div className="stat-label">Listed Products</div>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon-wrapper" style={{ background: '#E3F2FD', color: '#1E88E5' }}>📦</div>
+              <div className="stat-icon-wrapper" style={{ background: '#0D47A1', color: '#90CAF9' }}>📦</div>
               <div>
                 <div className="stat-value">{farmerOrders.filter(o => o.status !== 'delivered').length}</div>
                 <div className="stat-label">Active Orders</div>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon-wrapper" style={{ background: '#FFF3E0', color: '#EF6C00' }}>💰</div>
+              <div className="stat-icon-wrapper" style={{ background: '#3E2723', color: '#FFB74D' }}>💰</div>
               <div>
                 <div className="stat-value" style={{ fontSize: '1.8rem' }}>
                   ${farmerOrders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + parseFloat(o.total_price), 0).toFixed(2)}
@@ -1436,7 +1431,7 @@ function App() {
                             {order.status === 'confirmed' && (
                               <button 
                                 className="btn btn-primary btn-sm"
-                                style={{ backgroundColor: '#8B5CF6', boxShadow: 'none' }}
+                                style={{ backgroundColor: '#8B5CF6', color: '#0C140F', boxShadow: 'none' }}
                                 onClick={() => handleUpdateOrderStatus(order.order_id, 'shipped')}
                               >
                                 Ship Cargo 🚀
@@ -1784,7 +1779,7 @@ function App() {
                 <div className="organic-card">
                   <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontFamily: 'var(--font-heading)', color: 'var(--color-forest)' }}>
                     <span>📨 Customer Notification Broadcast Queue</span>
-                    <span className="role-badge" style={{ backgroundColor: '#E0F2F1', color: '#00796B', fontSize: '0.65rem' }}>Scheduler active</span>
+                    <span className="role-badge" style={{ backgroundColor: '#101A15', color: '#74C69D', fontSize: '0.65rem' }}>Scheduler active</span>
                   </h3>
                   <p style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)', marginBottom: '1.25rem' }}>
                     Automated background queue logs dispatch requests in real-time. An event poller continually processes the broadcast rows to send SMS/WhatsApp notifications on crop updates.
@@ -1847,7 +1842,7 @@ function App() {
 
             {/* Write a review form */}
             {role === 'buyer' && (
-              <form onSubmit={submitReview} style={{ border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem', background: '#FAFAF7' }}>
+              <form onSubmit={submitReview} style={{ border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem', background: '#101A15' }}>
                 <h4 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', color: 'var(--color-forest)', fontWeight: 600 }}>Write a Review</h4>
                 {reviewError && <div style={{ color: '#EF4444', fontSize: '0.8rem', marginBottom: '0.5rem' }}>Error: {reviewError}</div>}
                 
@@ -1887,14 +1882,14 @@ function App() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {productReviews.map(rev => (
-                    <div key={rev.review_id} style={{ padding: '0.85rem', background: '#FAFAF7', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+                    <div key={rev.review_id} style={{ padding: '0.85rem', background: '#101A15', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                         <strong style={{ fontSize: '0.88rem', color: 'var(--color-text-primary)' }}>👤 {rev.buyer_name}</strong>
                         <span className="stars" style={{ color: '#F4A261' }}>
                           {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
                         </span>
                       </div>
-                      <p style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeights: 1.4 }}>{rev.comment}</p>
+                      <p style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{rev.comment}</p>
                       <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem', textAlign: 'right' }}>
                         {new Date(rev.created_at).toLocaleDateString()}
                       </div>
