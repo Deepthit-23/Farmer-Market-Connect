@@ -891,8 +891,8 @@ function App() {
         <div className="brand">
           <div className="brand-icon">🌱</div>
           <div>
-            <span className="gradient-text" style={{ fontSize: '1.4rem', fontWeight: 800 }}>Farmer Market Connect</span>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 400 }}>DBMS College Mini-Project Dashboard</div>
+            <span className="gradient-text" style={{ fontSize: '1.5rem', fontWeight: 800 }}>AgriFlow Direct</span>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-body)', fontWeight: 500, letterSpacing: '0.05em' }}>Direct Farm-to-Table Supply Chain Integrity</div>
           </div>
         </div>
 
@@ -905,24 +905,24 @@ function App() {
         </div>
       </header>
 
-      {/* Global Live Action Console (Visualizes triggers in real-time) */}
+      {/* Global Live Action Console (Visualizes supply chain audits in real-time) */}
       <div className="dbms-console">
         <div className="console-title">
-          <span>🖥️ Live DBMS Spotlight Console</span>
+          <span>🖥️ Supply Chain Logistics Audit Ledger</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Connected (MySQL 8)</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Event-Driven Broadcaster</span>
             <div className="pulse-dot"></div>
           </div>
         </div>
         <div className="log-entry">
-          <span className="log-meta">[Action Log]: </span>
+          <span style={{ color: 'var(--text-muted)' }}>[System Audit]: </span>
           <span>{lastTriggerAction}</span>
         </div>
-        <div className="log-entry" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', borderTop: '1px dashed rgba(52, 211, 153, 0.08)', paddingTop: '0.4rem', marginTop: '0.4rem' }}>
-          <span style={{ color: 'var(--accent-mint)', fontWeight: 600 }}>Featured DB Concepts demonstrated: </span>
-          {role === 'buyer' && <span>Self-joins, dynamic Jaccard index similarity scores, co-occurrence catalog recommendations.</span>}
-          {role === 'farmer' && <span>Transactional order dispatching, cascade deletions, triggers tracking log.</span>}
-          {role === 'admin' && <span>AFTER UPDATE order trigger logging (`NOTIFICATION_TRIGGER_LOG`), auto-queued Twilio notification jobs (`NOTIFICATION_QUEUE`), full audit trails.</span>}
+        <div className="log-entry" style={{ fontSize: '0.75rem', color: 'var(--text-body)', borderTop: '1px dashed rgba(52, 211, 153, 0.08)', paddingTop: '0.4rem', marginTop: '0.4rem' }}>
+          <span style={{ color: 'var(--brand-mint)', fontWeight: 600 }}>Engine Logistics Highlights: </span>
+          {role === 'buyer' && <span>Integrated B2B/B2C direct crop catalog feeds, Jaccard similarity-score basket matching recommendation engines.</span>}
+          {role === 'farmer' && <span>Transactional logistics fulfillment updates, catalog inventory stock-quantity controls, secure cargo dispatch.</span>}
+          {role === 'admin' && <span>Event-triggered supply chain integrity checks, automated SMS/WhatsApp logistics logs, real-time message broadcasting queues.</span>}
         </div>
       </div>
 
@@ -1093,13 +1093,12 @@ function App() {
                 <div>
                   <div className="glass-panel" style={{ marginBottom: '1.5rem' }}>
                     <h3 className="gradient-text" style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-                      ⚙️ MySQL Basket Co-occurrence engine
+                      ⚙️ Predictive Supply Chain Analytics
                     </h3>
-                    <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                      These recommendations are calculated by a MySQL Stored Procedure using a self-join query 
-                      on past transactions across the whole marketplace. The similarity score represents the 
-                      <strong> Jaccard Index</strong> of orders co-occurring between the products you've previously ordered 
-                      and these suggested items.
+                    <p style={{ fontSize: '0.88rem', color: 'var(--text-body)', lineHeight: 1.6 }}>
+                      Our automated demand analytics engine processes co-occurrence pairings from historic orders across the marketplace. 
+                      Using a <strong>Jaccard Similarity Index</strong>, the system identifies real-time catalog pairings matching your previous 
+                      procurements to suggest optimal restock items.
                     </p>
                   </div>
 
@@ -1368,7 +1367,7 @@ function App() {
               className={`tab-btn ${activeTab === 'dbms' ? 'active' : ''}`}
               onClick={() => setActiveTab('dbms')}
             >
-              ⚙️ live dbms logs
+              ⚙️ Security Audit Ledger
             </button>
           </div>
 
@@ -1585,15 +1584,15 @@ function App() {
 
           {activeTab === 'dbms' && (
             <div>
-              {/* DBMS Logs */}
+              {/* Supply Chain Audit Ledger */}
               <div className="glass-panel" style={{ marginBottom: '2rem' }}>
                 <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>⚠️ NOTIFICATION_TRIGGER_LOG (Audit Trail)</span>
-                  <span className="spotlight-tag">Trigger Log</span>
+                  <span>📊 Automated Supply Chain Action Ledger</span>
+                  <span className="spotlight-tag">Security Audit</span>
                 </h3>
-                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                  This table captures audits executed by the <strong>`tr_order_after_update`</strong> trigger in your MySQL database. 
-                  Every time a farmer changes the status of an order, MySQL intercepts the action and writes to this audit table automatically.
+                <p style={{ fontSize: '0.88rem', color: 'var(--text-body)', marginBottom: '1rem' }}>
+                  This ledger archives automated data audits executed securely inside the database container. 
+                  Every lifecycle status update on dispatches triggers an instant, write-once ledger entry to ensure compliance and traceability.
                 </p>
 
                 <div className="data-table-container">
@@ -1601,11 +1600,11 @@ function App() {
                     <thead>
                       <tr>
                         <th>Log ID</th>
-                        <th>Trigger Name</th>
+                        <th>Auditor Ledger</th>
                         <th>Action</th>
-                        <th>Target Record ID</th>
+                        <th>Target Dispatch ID</th>
                         <th>Audit Details</th>
-                        <th>Fired Timestamp</th>
+                        <th>Timestamp</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1624,15 +1623,15 @@ function App() {
                 </div>
               </div>
 
-              {/* Twilio Queue */}
+              {/* Broadcast Notification Queue */}
               <div className="glass-panel">
                 <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>📨 Twilio WhatsApp Notification Queue (`NOTIFICATION_QUEUE`)</span>
-                  <span className="spotlight-tag" style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#22d3ee' }}>Twilio Poller</span>
+                  <span>📨 Automated Customer Notification Broadcast Queue</span>
+                  <span className="spotlight-tag" style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#22d3ee' }}>Broadcast Poller</span>
                 </h3>
-                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                  When orders change status, the MySQL trigger automatically queues formatted dispatch messages here. 
-                  The FastAPI background worker polls this table and sends out notifications, updating the status from <code>pending</code> to <code>sent</code>.
+                <p style={{ fontSize: '0.88rem', color: 'var(--text-body)', marginBottom: '1rem' }}>
+                  Logistics status changes automatically trigger queued messages for distribution. 
+                  An event-driven worker continually audits the queue and dispatches SMS/WhatsApp logistics updates to transport handlers and customers.
                 </p>
 
                 <div className="data-table-container">
@@ -1640,10 +1639,10 @@ function App() {
                     <thead>
                       <tr>
                         <th>Queue ID</th>
-                        <th>Order ID</th>
+                        <th>Dispatch ID</th>
                         <th>Recipient Phone</th>
-                        <th>Queued WhatsApp Message</th>
-                        <th>Job Status</th>
+                        <th>Broadcast Message</th>
+                        <th>Broadcaster Status</th>
                         <th>Queued At</th>
                       </tr>
                     </thead>
