@@ -14,8 +14,8 @@ As a **DBMS-centric showcase**, the project leverages advanced database manageme
 
 ## ⚡ Technical Stack
 
-*   **Frontend**: React (Vite, modern responsive CSS system)
-*   **Backend**: FastAPI (Python), SQLAlchemy ORM (for schema migrations & standard queries), PyMySQL
+*   **Frontend**: React (Vite, modern responsive CSS system), `i18next` for localization, `Recharts` for data-driven analytics graphing
+*   **Backend**: FastAPI (Python), SQLAlchemy ORM (for schema migrations & standard queries), PyMySQL, multilingual translation middleware
 *   **Database**: MySQL 8.0+ (utilizing triggers, stored procedures, indexes, self-joins, and transaction logs)
 *   **Auth**: JWT (JSON Web Tokens) with role-based access control (Farmer / Buyer / Admin)
 *   **Notification Engine**: Twilio WhatsApp API integrated with an asynchronous polling worker
@@ -73,6 +73,8 @@ graph TD
 *   **Farm Listing**: Set farm details, regional market base, and contact details.
 *   **Crop Management**: Add, update, or remove crop details, inventory stock levels, and real-time pricing.
 *   **Order Tracking**: Receive automatic alerts when a buyer orders their items; update order status from `pending` to `shipped` to release fresh cargo.
+*   **Interactive Analytical Dashboards**: View historical revenue trends, individual crop sales distributions, and customer growth retention metrics (New vs. Repeat customers) plotted dynamically via Recharts.
+*   **Low Stock Alerts**: Displays real-time alert banners highlighting listings that are running low on inventory stock.
 
 ### 🛒 The Buyer
 *   **Fresh Market**: Browse harvests by categories (Vegetables, Fruits, Grains, Dairy).
@@ -83,6 +85,10 @@ graph TD
 ### 🔑 The Market Admin
 *   **Market Registry**: Create and manage physical local markets.
 *   **Directory Management**: Monitor crop listings, system-wide sales volumes, and farmer distribution profiles.
+
+### 🌐 Global Multilingual Interface
+*   **Real-time Switching**: Choose dynamically from **English (EN)**, **Hindi (हिन्दी)**, **Kannada (ಕನ್ನಡ)**, and **Tamil (தமிழ்)**.
+*   **Unified Translations**: All localized translations are standard-mapped in JSON format (`locales/*.json` on backend and `src/locales/*.json` on frontend), providing localized descriptions for crop items, system alerts, and notification headers.
 
 ---
 
